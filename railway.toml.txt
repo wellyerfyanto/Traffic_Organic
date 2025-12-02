@@ -1,0 +1,15 @@
+[build]
+builder = "Nixpacks"
+buildCommand = "npm install --omit=dev && npx puppeteer browsers install chrome"
+
+[deploy]
+startCommand = "node server.js"
+healthcheckPath = "/health"
+healthcheckTimeout = 60
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[environments.production.variables]
+NODE_ENV = "production"
+PORT = "3000"
+PUPPETEER_EXECUTABLE_PATH = "/usr/bin/chromium-browser"
