@@ -11,6 +11,9 @@ RUN apk update && apk add --no-cache \
     ca-certificates \
     ttf-freefont \
     font-noto-ttf \
+    wget \
+    gnupg \
+    curl \
     && rm -rf /var/cache/apk/*
 
 # Set environment variables untuk Puppeteer
@@ -23,11 +26,11 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies (skip dev dependencies)
 RUN npm ci --only=production --legacy-peer-deps
 
 # ==================== STAGE 2: Runner ====================
-FROM node:18-alpine
+FROM node:18-alpine AS runner
 
 # Install runtime dependencies untuk Chrome
 RUN apk update && apk add --no-cache \
@@ -58,10 +61,10 @@ COPY --from=builder /app/package*.json ./
 # Copy app source
 COPY . .
 
-# Copy public folder
+# Copy public folder jika ada
 COPY public ./public
 
-# Gunakan user node yang sudah ada di image Node.js
+# Gunakan user yang sudah ada (node) di image Node.js
 USER node
 
 # Expose port
