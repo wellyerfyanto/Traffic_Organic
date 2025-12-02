@@ -11,6 +11,8 @@
     "test": "node -e \"console.log('System test passed')\""
   },
   "dependencies": {
+    "puppeteer-extra-plugin-recaptcha": "^3.6.6",
+    "random-useragent": "^0.5.0"
     "express": "^4.18.2",
     "puppeteer": "^21.5.0",
     "puppeteer-extra": "^3.3.6",
