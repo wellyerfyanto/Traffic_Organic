@@ -1,22 +1,25 @@
-FROM node:18-slim
+FROM node:18-bullseye-slim
 
-# Install Chromium dependencies
+# Install dependencies untuk Chromium
 RUN apt-get update && apt-get install -y \
-    chromium \
-    chromium-sandbox \
-    fonts-ipafont-gothic \
-    fonts-wqy-zenhei \
-    fonts-thai-tlwg \
-    fonts-kacst \
-    fonts-freefont-ttf \
-    libxss1 \
+    wget \
+    gnupg \
+    ca-certificates \
     --no-install-recommends
 
+# Install Google Chrome
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable \
+    --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 # Set environment variables
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-ENV CHROMIUM_PATH=/usr/bin/chromium
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+ENV CHROMIUM_PATH=/usr/bin/google-chrome-stable
 
 # Create app directory
 WORKDIR /app
@@ -25,18 +28,20 @@ WORKDIR /app
 COPY package*.json ./
 COPY .npmrc ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install app dependencies
+RUN npm install --production
 
-# Copy source code
+# Bundle app source
 COPY . .
 
 # Create non-root user
-RUN useradd -m -u 1000 appuser
+RUN groupadd -r appuser && useradd -r -g appuser -G audio,video appuser \
+    && mkdir -p /home/appuser/Downloads \
+    && chown -R appuser:appuser /home/appuser \
+    && chown -R appuser:appuser /app
+
 USER appuser
 
-# Expose port
 EXPOSE 3000
 
-# Start application
-CMD ["node", "server.js"]
+CMD [ "node", "server.js" ]
