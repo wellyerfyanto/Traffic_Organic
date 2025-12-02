@@ -6,8 +6,20 @@ const cors = require('cors');
 const fs = require('fs');
 require('dotenv').config();
 
-const app = express();
+// Railway environment detection
+const isRailway = process.env.NODE_ENV === 'production';
 
+// Set Puppeteer executable path for Railway
+if (isRailway) {
+  process.env.PUPPETEER_EXECUTABLE_PATH = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable';
+  process.env.CHROMIUM_PATH = process.env.CHROMIUM_PATH || '/usr/bin/google-chrome-stable';
+  
+  console.log(`🚂 Railway environment detected`);
+  console.log(`🔧 Chrome path: ${process.env.PUPPETEER_EXECUTABLE_PATH}`);
+  console.log(`🔧 Chrome exists: ${fs.existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)}`);
+}
+
+const app = express();
 // ==================== SECURITY MIDDLEWARE ====================
 app.use(helmet({
   contentSecurityPolicy: false,
