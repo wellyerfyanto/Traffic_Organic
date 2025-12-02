@@ -1,0 +1,8 @@
+# Skip downloading Chrome during npm install
+PUPPETEER_SKIP_DOWNLOAD=true
+
+# Use system Chromium
+PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+# Set npm to use legacy peer deps for compatibility
+legacy-peer-deps=true
