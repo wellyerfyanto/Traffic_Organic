@@ -1,6 +1,3 @@
-
-## 6. **script.js** (✅ Diperbaiki - fix beberapa error)
-```javascript
 // ==================== GLOBAL VARIABLES ====================
 let proxyRefreshInterval = null;
 
