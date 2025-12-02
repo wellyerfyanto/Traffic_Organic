@@ -1,51 +1,42 @@
-# Gunakan image Node.js dengan Alpine
-FROM node:18-alpine
+FROM node:18-slim
 
-# Install dependencies untuk Puppeteer dan Chrome
-RUN apk update && apk add --no-cache \
-    curl \
-    bash \
-    nss \
-    freetype \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont \
-    font-noto-ttf \
+# Install Chromium dependencies
+RUN apt-get update && apt-get install -y \
     chromium \
-    chromium-chromedriver \
-    && rm -rf /var/cache/apk/*
+    chromium-sandbox \
+    fonts-ipafont-gothic \
+    fonts-wqy-zenhei \
+    fonts-thai-tlwg \
+    fonts-kacst \
+    fonts-freefont-ttf \
+    libxss1 \
+    --no-install-recommends
 
-# Set environment variables untuk Puppeteer
-ENV NODE_ENV=production \
-    PORT=3000 \
-    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
-    CHROMIUM_PATH=/usr/bin/chromium-browser
+# Set environment variables
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV CHROMIUM_PATH=/usr/bin/chromium
+ENV NODE_ENV=production
+ENV PORT=3000
 
 # Create app directory
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
+COPY .npmrc ./
 
 # Install dependencies
-RUN npm ci --only=production --legacy-peer-deps
+RUN npm ci --only=production
 
-# Copy app source
+# Copy source code
 COPY . .
 
-# Copy public folder
-COPY public ./public
-
-# Gunakan user node yang sudah ada
-USER node
+# Create non-root user
+RUN useradd -m -u 1000 appuser
+USER appuser
 
 # Expose port
 EXPOSE 3000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:${PORT}/health', (r) => {if(r.statusCode!==200)throw new Error('Status '+r.statusCode)}).on('error', ()=>{throw new Error('Health check failed')})"
 
 # Start application
 CMD ["node", "server.js"]
