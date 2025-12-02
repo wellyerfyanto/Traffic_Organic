@@ -1,50 +1,21 @@
-# ==================== STAGE 1: Builder ====================
-FROM node:18-alpine AS builder
+# Gunakan image Node.js dengan Alpine
+FROM node:18-alpine
 
 # Install dependencies untuk Puppeteer dan Chrome
 RUN apk update && apk add --no-cache \
-    chromium \
+    curl \
+    bash \
     nss \
     freetype \
-    freetype-dev \
     harfbuzz \
     ca-certificates \
     ttf-freefont \
     font-noto-ttf \
-    wget \
-    gnupg \
-    curl \
+    chromium \
+    chromium-chromedriver \
     && rm -rf /var/cache/apk/*
 
 # Set environment variables untuk Puppeteer
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-
-# Create app directory
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies (skip dev dependencies)
-RUN npm ci --only=production --legacy-peer-deps
-
-# ==================== STAGE 2: Runner ====================
-FROM node:18-alpine AS runner
-
-# Install runtime dependencies untuk Chrome
-RUN apk update && apk add --no-cache \
-    chromium \
-    nss \
-    freetype \
-    freetype-dev \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont \
-    font-noto-ttf \
-    && rm -rf /var/cache/apk/*
-
-# Set environment variables
 ENV NODE_ENV=production \
     PORT=3000 \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
@@ -54,17 +25,19 @@ ENV NODE_ENV=production \
 # Create app directory
 WORKDIR /app
 
-# Copy dari builder stage
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package*.json ./
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production --legacy-peer-deps
 
 # Copy app source
 COPY . .
 
-# Copy public folder jika ada
+# Copy public folder
 COPY public ./public
 
-# Gunakan user yang sudah ada (node) di image Node.js
+# Gunakan user node yang sudah ada
 USER node
 
 # Expose port
