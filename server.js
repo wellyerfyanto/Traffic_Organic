@@ -56,6 +56,7 @@ const AUTO_LOOP_CONFIG = {
   searchEngines: ['google', 'bing'], // Pencarian bergantian
   proxyRefreshInterval: 10 * 60 * 1000, // ⭐ AUTO-PROXY REFRESH 10 MENIT
   minProxyCount: 20 // Minimal proxy aktif
+  timeMultiplierEnabled: true
 };
 
 let autoLoopInterval = null;
@@ -115,6 +116,7 @@ function startAutoLooping() {
           maxKeywords: 3,
           enableSubUrl: true,
           searchEngine: AUTO_LOOP_CONFIG.searchEngines[Math.floor(Math.random() * 2)]
+          enableTimeMultiplier: AUTO_LOOP_CONFIG.timeMultiplierEnabled
         };
 
         await botManager.startOrganicSession(sessionConfig);
