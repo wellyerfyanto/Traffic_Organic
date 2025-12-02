@@ -8,23 +8,20 @@
     "dev": "nodemon server.js",
     "setup": "npm install && npx puppeteer browsers install chrome",
     "railway": "node server.js",
-    "test": "node -e \"console.log('System test passed')\""
+    "test": "node -e \"console.log('System test passed')\"",
+    "postinstall": "npx puppeteer browsers install chrome"
   },
   "dependencies": {
     "express": "^4.18.2",
     "puppeteer": "^21.5.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "puppeteer-extra-plugin-recaptcha": "^3.6.6",
-    "puppeteer-extra-plugin-adblocker": "^2.13.5",
     "express-session": "^1.17.3",
     "cors": "^2.8.5",
     "helmet": "^7.1.0",
     "dotenv": "^16.3.1",
     "node-fetch": "^2.7.0",
-    "cheerio": "^1.0.0-rc.12",
-    "random-useragent": "^0.5.0",
-    "proxy-chain": "^2.2.1"
+    "cheerio": "^1.0.0-rc.12"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
