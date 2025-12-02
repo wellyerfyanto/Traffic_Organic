@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌱 Pure Organic Traffic Bot</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-seedling"></i> Pure Organic Traffic Bot</h1>
+            <p class="subtitle">100% Organic Traffic via Search Engines • Auto-Proxy Refresh Every 10 Minutes</p>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <i class="fas fa-globe"></i>
+                <span class="stat-label">Mode</span>
+                <span class="stat-value">🌱 Pure Organic</span>
+            </div>
+            <div class="stat">
+                <i class="fas fa-shield-alt"></i>
+                <span class="stat-label">Proxies</span>
+                <span class="stat-value" id="liveProxyCount">Loading...</span>
+            </div>
+            <div class="stat">
+                <i class="fas fa-sync-alt"></i>
+                <span class="stat-label">Refresh</span>
+                <span class="stat-value">Every 10m</span>
+            </div>
+            <div class="stat">
+                <i class="fas fa-search"></i>
+                <span class="stat-label">Engines</span>
+                <span class="stat-value">Google • Bing</span>
+            </div>
+        </div>
+
+        <main class="main-content">
+            <!-- Configuration Section -->
+            <section class="config-section">
+                <h2><i class="fas fa-cogs"></i> Organic Session Configuration</h2>
+                
+                <div class="form-group">
+                    <label for="targetUrl"><i class="fas fa-bullseye"></i> Target URL:</label>
+                    <input type="url" id="targetUrl" required 
+                           placeholder="https://your-target-site.com"
+                           value="https://cryptoajah.blogspot.com">
+                    <small>Website yang akan dikunjungi melalui search engine</small>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="searchEngine"><i class="fas fa-search"></i> Search Engine:</label>
+                        <select id="searchEngine">
+                            <option value="google">Google</option>
+                            <option value="bing">Bing</option>
+                            <option value="random">Random (Google/Bing)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="maxKeywords"><i class="fas fa-key"></i> Keywords per Session:</label>
+                        <input type="number" id="maxKeywords" min="1" max="10" value="3">
+                        <small>Jumlah keyword untuk simulasi pencarian</small>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="deviceType"><i class="fas fa-mobile-alt"></i> Device Type:</label>
+                    <select id="deviceType">
+                        <option value="desktop">Desktop</option>
+                        <option value="mobile">Mobile</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-server"></i> Proxy Type:</label>
+                    <div class="proxy-options">
+                        <label class="proxy-option">
+                            <input type="radio" name="proxyType" value="fresh" checked>
+                            <div class="proxy-card">
+                                <i class="fas fa-bolt"></i>
+                                <h3>Fresh Proxy</h3>
+                                <p>Recommended • Auto Update 10m</p>
+                                <div class="proxy-badge">50 Max</div>
+                            </div>
+                        </label>
+                        
+                        <label class="proxy-option">
+                            <input type="radio" name="proxyType" value="web">
+                            <div class="proxy-card">
+                                <i class="fas fa-globe"></i>
+                                <h3>Web Proxy</h3>
+                                <p>Secondary Option</p>
+                                <div class="proxy-badge">25 Max</div>
+                            </div>
+                        </label>
+                        
+                        <label class="proxy-option">
+                            <input type="radio" name="proxyType" value="vpn">
+                            <div class="proxy-card">
+                                <i class="fas fa-shield-alt"></i>
+                                <h3>VPN Extension</h3>
+                                <p>Stable Connection</p>
+                                <div class="proxy-badge">10 Min</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="proxy-stats-card">
+                    <h3><i class="fas fa-chart-bar"></i> Live Proxy Statistics</h3>
+                    <div id="liveProxyStats" class="proxy-stats-grid">
+                        <div class="loading">Loading proxy data...</div>
+                    </div>
+                    <div class="proxy-footer">
+                        <small><i class="fas fa-sync-alt"></i> Auto-refresh every 10 minutes</small>
+                        <small id="proxyLastRefresh">Last refresh: -</small>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button class="btn btn-primary" onclick="startPureOrganic()">
+                        <i class="fas fa-seedling"></i> Start Pure Organic Session
+                    </button>
+                    <button class="btn btn-secondary" onclick="analyzeKeywords()">
+                        <i class="fas fa-search"></i> Analyze Keywords First
+                    </button>
+                    <button class="btn btn-info" onclick="testSystem()">
+                        <i class="fas fa-vial"></i> Test System
+                    </button>
+                </div>
+            </section>
+            
+            <!-- Organic Flow Section -->
+            <section class="flow-section">
+                <h2><i class="fas fa-project-diagram"></i> Pure Organic Flow</h2>
+                <div class="flow-diagram">
+                    <div class="flow-step active">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3><i class="fas fa-search"></i> Keyword Analysis</h3>
+                            <p>Automatic keyword extraction from target</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3><i class="fas fa-globe"></i> Search Engine</h3>
+                            <p>Search via Google or Bing</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3><i class="fas fa-mouse-pointer"></i> Click from SERP</h3>
+                            <p>Organic click from search results</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3><i class="fas fa-user-check"></i> Extended Activities</h3>
+                            <p>Realistic browsing on target</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <h3><i class="fas fa-redo"></i> Return to Search</h3>
+                            <p>Repeat with next keyword</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="note-box">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Important:</strong> No direct traffic allowed. All visits must come from search engine results.
+                </div>
+            </section>
+            
+            <!-- Auto-Loop Section -->
+            <section class="auto-loop-section">
+                <h2><i class="fas fa-sync-alt"></i> Organic Auto-Loop System</h2>
+                
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="organicAutoLoop" checked>
+                        <span class="checkmark"></span>
+                        Enable Organic Auto-Loop (Scheduled sessions)
+                    </label>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="organicInterval"><i class="fas fa-clock"></i> Interval (minutes):</label>
+                        <input type="number" id="organicInterval" min="15" max="240" value="45">
+                        <small>Minimal 15 menit untuk natural pattern</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="organicMaxSessions"><i class="fas fa-layer-group"></i> Max Concurrent Sessions:</label>
+                        <input type="number" id="organicMaxSessions" min="1" max="10" value="3">
+                        <small>Session berjalan bersamaan</small>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button class="btn btn-success" onclick="startOrganicAutoLoop()">
+                        <i class="fas fa-play-circle"></i> Start Organic Auto-Loop
+                    </button>
+                    <button class="btn btn-warning" onclick="stopAutoLoop()">
+                        <i class="fas fa-stop-circle"></i> Stop Auto-Loop
+                    </button>
+                    <button class="btn btn-info" onclick="checkLoopStatus()">
+                        <i class="fas fa-info-circle"></i> Check Status
+                    </button>
+                </div>
+                
+                <div id="autoLoopStatus" class="status-box"></div>
+            </section>
+            
+            <!-- Features Section -->
+            <section class="features-section">
+                <h2><i class="fas fa-star"></i> Key Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-search"></i>
+                        <h3>100% Organic</h3>
+                        <p>All traffic via search engines</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-sync-alt"></i>
+                        <h3>Auto-Proxy Refresh</h3>
+                        <p>Proxies refresh every 10 minutes</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-random"></i>
+                        <h3>Search Rotation</h3>
+                        <p>Alternates Google & Bing</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-chart-line"></i>
+                        <h3>Keyword Analysis</h3>
+                        <p>Automatic keyword optimization</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-user-check"></i>
+                        <h3>Realistic Behavior</h3>
+                        <p>Human-like browsing patterns</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>Safe & Secure</h3>
+                        <p>No direct traffic allowed</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- System Status -->
+            <section class="status-section">
+                <h2><i class="fas fa-heartbeat"></i> System Status</h2>
+                <div id="systemStatus" class="status-box">
+                    <div class="loading-status">
+                        <i class="fas fa-spinner fa-spin"></i> Checking system status...
+                    </div>
+                </div>
+                <div class="status-actions">
+                    <button class="btn btn-outline" onclick="refreshStatus()">
+                        <i class="fas fa-redo"></i> Refresh Status
+                    </button>
+                    <button class="btn btn-outline" onclick="goToMonitoring()">
+                        <i class="fas fa-chart-bar"></i> Go to Monitoring
+                    </button>
+                    <button class="btn btn-outline" onclick="clearAllSessions()">
+                        <i class="fas fa-trash"></i> Clear All Sessions
+                    </button>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="footer">
+            <p>🌱 <strong>Pure Organic Traffic Bot</strong> v3.0 • 100% Search Engine Traffic</p>
+            <p class="footer-note">
+                <i class="fas fa-exclamation-circle"></i> 
+                For educational purposes only. Use responsibly.
+            </p>
+        </footer>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
