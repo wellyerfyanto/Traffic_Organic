@@ -1,12 +1,13 @@
 {
   "name": "pure-organic-traffic-bot",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "Pure Organic Traffic Bot with Auto-Proxy Refresh & Search Engine Traffic",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "railway": "node server.js"
+    "start": "node --max-http-header-size=16384 --trace-warnings server.js",
+    "dev": "nodemon --max-http-header-size=16384 server.js",
+    "railway": "node --max-http-header-size=16384 --trace-warnings server.js",
+    "test": "node test-proxy.js"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -14,7 +15,6 @@
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "puppeteer-extra-plugin-recaptcha": "^3.6.6",
-    "puppeteer-extra-plugin-adblocker": "^2.13.5",
     "express-session": "^1.17.3",
     "cors": "^2.8.5",
     "helmet": "^7.1.0",
@@ -22,8 +22,8 @@
     "node-fetch": "^2.7.0",
     "cheerio": "^1.0.0-rc.12",
     "random-useragent": "^0.5.0",
-    "proxy-chain": "^2.2.1",
-    "user-agents": "^1.1.0"
+    "user-agents": "^1.1.0",
+    "proxy-chain": "^2.2.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
@@ -36,7 +36,8 @@
     "organic-traffic",
     "seo",
     "traffic-bot",
-    "proxy-manager"
+    "proxy-manager",
+    "search-engine-traffic"
   ],
   "author": "Organic Traffic Team",
   "license": "MIT"
