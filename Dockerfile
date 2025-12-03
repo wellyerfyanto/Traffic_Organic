@@ -22,8 +22,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# GANTI INI: npm install bukan npm ci
+RUN npm install --omit=dev --legacy-peer-deps
 
 # Copy app source
 COPY . .
