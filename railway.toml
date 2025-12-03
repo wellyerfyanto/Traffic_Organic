@@ -18,3 +18,5 @@ AUTO_LOOP = "true"
 LOOP_INTERVAL = "2700000"
 MAX_SESSIONS = "3"
 DEFAULT_TARGET_URL = "https://cryptoajah.blogspot.com"
+PROXY_REFRESH_INTERVAL = "300000"  # 5 menit
+ENABLE_DIRECT_FALLBACK = "true"
