@@ -1,10 +1,31 @@
-// ==================== PROXY HANDLER 2025 (COMPLETE FIXED VERSION) ====================
-const fetch = require('node-fetch');
+// ==================== PROXY HANDLER 2025 (FIXED FOR NODE 18+) ====================
+// Gunakan fetch native Node.js 18+ atau fallback ke node-fetch
+let fetch;
+try {
+  // Coba gunakan fetch native Node.js 18+
+  fetch = global.fetch || require('node-fetch');
+} catch (error) {
+  console.log('⚠️ Using node-fetch as fallback');
+  fetch = require('node-fetch');
+}
+
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
-const { SocksProxyAgent } = require('socks-proxy-agent');
-const { HttpsProxyAgent } = require('https-proxy-agent');
+
+// Gunakan dynamic import untuk socks-proxy-agent dan https-proxy-agent
+let SocksProxyAgent, HttpsProxyAgent;
+try {
+  const socks = require('socks-proxy-agent');
+  const https = require('https-proxy-agent');
+  SocksProxyAgent = socks.SocksProxyAgent || socks;
+  HttpsProxyAgent = https.HttpsProxyAgent || https;
+} catch (error) {
+  console.log('⚠️ Proxy agents not available, continuing without...');
+  SocksProxyAgent = class MockAgent {};
+  HttpsProxyAgent = class MockAgent {};
+}
+
 const cheerio = require('cheerio');
 const fs = require('fs').promises;
 const path = require('path');
