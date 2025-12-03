@@ -8,8 +8,6 @@
     "dev": "nodemon --max-http-header-size=16384 server.js",
     "railway": "node --max-http-header-size=16384 --trace-warnings server.js",
     "test": "node test-proxy.js",
-    "fix": "node setup-fix.js",
-    "postinstall": "node setup-fix.js",
     "test-modules": "node test-module-loading.js"
   },
   "dependencies": {
