@@ -1,7 +1,6 @@
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const RecaptchaPlugin = require('puppeteer-extra-plugin-recaptcha');
-const AdblockerPlugin = require('puppeteer-extra-plugin-adblocker');
 
 // Apply plugins
 puppeteer.use(StealthPlugin());
@@ -12,7 +11,6 @@ puppeteer.use(RecaptchaPlugin({
   },
   visualFeedback: true
 }));
-puppeteer.use(AdblockerPlugin({ blockTrackers: true }));
 
 // Enhanced User Agents Database
 const MODERN_USER_AGENTS = {
