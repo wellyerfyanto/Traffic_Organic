@@ -18,10 +18,10 @@ ENV CHROMIUM_PATH=/usr/bin/chromium-browser
 ENV NODE_ENV=production
 
 # Copy package files
-COPY package*.json ./
+COPY package.json .
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies (gunakan npm install, bukan npm ci)
+RUN npm install --omit=dev
 
 # Copy application files
 COPY . .
