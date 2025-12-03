@@ -1,8 +1,6 @@
 FROM node:18-alpine
 
-WORKDIR /app
-
-# Install dependencies for Puppeteer
+# Install Chromium for Puppeteer
 RUN apk add --no-cache \
     chromium \
     nss \
@@ -11,43 +9,46 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont \
     font-noto-emoji \
-    curl \
-    bash
+    && rm -rf /var/cache/apk/*
 
 # Set environment variables for Puppeteer
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-ENV CHROMIUM_PATH=/usr/bin/chromium-browser
-ENV NODE_ENV=production
-ENV DISABLE_SETUID_SANDBOX=true
-ENV NO_SANDBOX=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
+    NODE_ENV=production \
+    PORT=3000
+
+# Create app directory
+WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install --production
+RUN npm ci --only=production
 
-# Copy ALL application files
+# Copy app source
 COPY . .
 
-# Create necessary directories if they don't exist
+# Create necessary directories
 RUN mkdir -p bot public data
 
-# Verify file structure
-RUN echo "=== FILE STRUCTURE VERIFICATION ===" && \
-    echo "Root files:" && ls -la && \
-    echo "Bot directory:" && ls -la bot/ 2>/dev/null || echo "Bot directory is empty or doesn't exist" && \
-    echo "Public directory:" && ls -la public/ 2>/dev/null || echo "Public directory is empty"
-
-# Set permissions
-RUN chmod -R 755 . && \
-    chown -R node:node /app
+# Move bot files if they exist in root
+RUN if [ -f "proxyHandler.js" ]; then mv proxyHandler.js bot/; fi && \
+    if [ -f "trafficGenerator.js" ]; then mv trafficGenerator.js bot/; fi && \
+    if [ -f "keywordAnalyzer.js" ]; then mv keywordAnalyzer.js bot/; fi && \
+    if [ -f "botHandler.js" ]; then mv botHandler.js bot/; fi
 
 # Create non-root user
-USER node
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S botuser -u 1001
+
+# Change ownership
+RUN chown -R botuser:nodejs /app
+
+# Switch to non-root user
+USER botuser
 
 # Expose port
 EXPOSE 3000
 
-# Start application
-CMD ["node", "--max-http-header-size=16384", "--trace-warnings", "server.js"]
+# Start the application
+CMD ["node", "server.js"]
