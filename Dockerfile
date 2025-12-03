@@ -14,7 +14,7 @@ RUN apk add --no-cache \
     curl \
     bash
 
-# Set environment variables for Puppeteer
+# Set environment variables
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 ENV CHROMIUM_PATH=/usr/bin/chromium-browser
 ENV NODE_ENV=production
@@ -24,24 +24,29 @@ ENV NO_SANDBOX=true
 # Copy package files
 COPY package*.json ./
 
-# Install ALL dependencies
+# Install dependencies
 RUN npm install --production
 
-# Copy application files
+# Copy ALL source files
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p bot public data logs
+RUN mkdir -p bot public data
+
+# VERIFICATION STEP: List files for debugging
+RUN echo "=== FILE STRUCTURE AFTER COPY ===" && \
+    ls -la && \
+    echo "=== BOT DIRECTORY ===" && \
+    ls -la bot/ 2>/dev/null || echo "Bot directory not found" && \
+    echo "=== ROOT JS FILES ===" && \
+    ls *.js 2>/dev/null || echo "No JS files in root"
 
 # Set permissions
 RUN chmod -R 755 . && \
     chown -R node:node /app
 
-# Create non-root user
 USER node
 
-# Expose port
 EXPOSE 3000
 
-# Start application
 CMD ["node", "--max-http-header-size=16384", "--trace-warnings", "server.js"]
