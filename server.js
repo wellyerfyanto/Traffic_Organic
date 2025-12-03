@@ -81,12 +81,12 @@ try {
   console.log(`✅ Puppeteer v${puppeteer.version} loaded`);
   
   // Load bot modules - FIX PATH
-  ProxyHandler = require('./proxyHandler');
-  KeywordAnalyzer = require('./keywordAnalyzer');
-  BotHandler = require('./botHandler');
+  ProxyHandler = require('./bot/proxyHandler');
+  KeywordAnalyzer = require('./bot/keywordAnalyzer');
+  BotHandler = require('./bot/botHandler');
   
   // Load TrafficGenerator
-  const TrafficGenerator = require('./trafficGenerator');
+  const TrafficGenerator = require('./bot/trafficGenerator');
   botManager = new TrafficGenerator();
   
   console.log('✅ All bot modules loaded successfully');
