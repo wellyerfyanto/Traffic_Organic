@@ -31,22 +31,7 @@ RUN npm install --production
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p bot public data
-
-# Move files to correct directories
-RUN if [ -f "proxyHandler.js" ]; then mv proxyHandler.js bot/; fi
-RUN if [ -f "botHandler.js" ]; then mv botHandler.js bot/; fi
-RUN if [ -f "keywordAnalyzer.js" ]; then mv keywordAnalyzer.js bot/; fi
-RUN if [ -f "trafficGenerator.js" ]; then mv trafficGenerator.js bot/; fi
-
-RUN if [ -f "index.html" ]; then mv index.html public/; fi
-RUN if [ -f "style.css" ]; then mv style.css public/; fi
-RUN if [ -f "script.js" ]; then mv script.js public/; fi
-RUN if [ -f "monitoring.html" ]; then mv monitoring.html public/; fi
-
-# Fix file names
-RUN if [ -f "Dockerfile.txt" ]; then mv Dockerfile.txt Dockerfile; fi
-RUN if [ -f "railway.toml.txt" ]; then mv railway.toml.txt railway.toml; fi
+RUN mkdir -p bot public data logs
 
 # Set permissions
 RUN chmod -R 755 . && \
