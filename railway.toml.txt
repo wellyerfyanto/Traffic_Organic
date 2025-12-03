@@ -1,0 +1,24 @@
+[build]
+builder = "DOCKERFILE"
+dockerfile = "Dockerfile"
+
+[deploy]
+startCommand = "node --max-http-header-size=16384 --trace-warnings server.js"
+healthcheckPath = "/health"
+healthcheckTimeout = 90
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
+
+[variables]
+NODE_ENV = "production"
+PORT = "3000"
+PUPPETEER_EXECUTABLE_PATH = "/usr/bin/chromium-browser"
+CHROMIUM_PATH = "/usr/bin/chromium-browser"
+AUTO_LOOP = "true"
+LOOP_INTERVAL = "2700000"
+MAX_SESSIONS = "3"
+DEFAULT_TARGET_URL = "https://cryptoajah.blogspot.com"
+PROXY_REFRESH_INTERVAL = "300000"
+ENABLE_DIRECT_FALLBACK = "true"
+ENABLE_PROXY_CACHE = "true"
+CACHE_TTL_MINUTES = "30"
