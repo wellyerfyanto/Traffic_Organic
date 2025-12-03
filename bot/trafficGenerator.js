@@ -53,7 +53,7 @@ const RETRY_CONFIG = {
 };
 
 class TrafficGenerator {
-  constructor() {
+    constructor() {
     this.activeSessions = new Map();
     this.sessionLogs = new Map();
     this.proxyHandler = new (require('./proxyHandler'))();
@@ -63,12 +63,20 @@ class TrafficGenerator {
     this.totalSessions = 0;
     this.successfulSessions = 0;
     
-    // Force initial proxy refresh
-    this.proxyHandler.updateAllProxies().catch(console.error);
+    // TAMBAHKAN INI: Initialize proxy system
+    setTimeout(() => {
+      if (this.proxyHandler.initialize) {
+        this.proxyHandler.initialize().then(() => {
+          console.log('✅ TrafficGenerator: Proxy system initialized with VPN');
+        }).catch(err => {
+          console.error('❌ TrafficGenerator: Proxy init error:', err.message);
+        });
+      }
+    }, 2000);
     
     this.KeywordAnalyzer = require('./keywordAnalyzer');
     
-    console.log('✅ TrafficGenerator initialized with all features');
+    console.log('✅ TrafficGenerator initialized with VPN support');
   }
 
   // ==================== PURE ORGANIC SESSION ====================
