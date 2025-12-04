@@ -1,0 +1,151 @@
+const fs = require('fs');
+const path = require('path');
+
+console.log('🔍 CHECKING SYSTEM INTEGRATION');
+console.log('===============================\n');
+
+// 1. Check directory structure
+console.log('1. DIRECTORY STRUCTURE:');
+const requiredDirs = ['bot', 'public', 'data'];
+requiredDirs.forEach(dir => {
+    const exists = fs.existsSync(path.join(__dirname, dir));
+    console.log(`   ${dir}/: ${exists ? '✅' : '❌'} ${exists ? 'EXISTS' : 'MISSING'}`);
+});
+
+// 2. Check bot files
+console.log('\n2. BOT FILES:');
+const requiredBotFiles = [
+    'proxyHandler.js',
+    'botHandler.js',
+    'keywordAnalyzer.js',
+    'trafficGenerator.js'
+];
+
+requiredBotFiles.forEach(file => {
+    const filePath = path.join(__dirname, 'bot', file);
+    const exists = fs.existsSync(filePath);
+    console.log(`   ${file}: ${exists ? '✅' : '❌'} ${exists ? 'EXISTS' : 'MISSING'}`);
+    
+    if (exists) {
+        try {
+            const content = fs.readFileSync(filePath, 'utf8');
+            const lines = content.split('\n').length;
+            const size = fs.statSync(filePath).size;
+            console.log(`        📏 Size: ${size} bytes, Lines: ${lines}`);
+            
+            // Quick syntax check
+            if (content.includes('module.exports')) {
+                console.log(`        📦 Exports: ✅ Yes`);
+            } else {
+                console.log(`        📦 Exports: ❌ No module.exports found!`);
+            }
+        } catch (error) {
+            console.log(`        ❌ Error reading: ${error.message}`);
+        }
+    }
+});
+
+// 3. Check dependencies
+console.log('\n3. DEPENDENCIES:');
+const packageJsonPath = path.join(__dirname, 'package.json');
+if (fs.existsSync(packageJsonPath)) {
+    try {
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+        console.log(`   Name: ${packageJson.name}`);
+        console.log(`   Version: ${packageJson.version}`);
+        console.log(`   Dependencies: ${Object.keys(packageJson.dependencies || {}).length}`);
+        
+        const criticalDeps = ['puppeteer', 'puppeteer-extra', 'express', 'node-fetch'];
+        criticalDeps.forEach(dep => {
+            if (packageJson.dependencies && packageJson.dependencies[dep]) {
+                console.log(`   ${dep}: ✅ ${packageJson.dependencies[dep]}`);
+            } else {
+                console.log(`   ${dep}: ❌ NOT FOUND`);
+            }
+        });
+    } catch (error) {
+        console.log(`   ❌ Error reading package.json: ${error.message}`);
+    }
+}
+
+// 4. Check server.js
+console.log('\n4. SERVER.JS:');
+const serverPath = path.join(__dirname, 'server.js');
+if (fs.existsSync(serverPath)) {
+    try {
+        const content = fs.readFileSync(serverPath, 'utf8');
+        console.log(`   ✅ Found server.js`);
+        
+        // Check critical imports
+        const imports = [
+            'require.*express',
+            'require.*puppeteer',
+            'require.*proxyHandler',
+            'require.*trafficGenerator'
+        ];
+        
+        imports.forEach(pattern => {
+            const regex = new RegExp(pattern);
+            if (regex.test(content)) {
+                console.log(`   Import ${pattern}: ✅ Found`);
+            } else {
+                console.log(`   Import ${pattern}: ❌ Missing`);
+            }
+        });
+        
+        // Check for error handling
+        if (content.includes('try') && content.includes('catch')) {
+            console.log(`   Error handling: ✅ Yes`);
+        } else {
+            console.log(`   Error handling: ❌ Insufficient`);
+        }
+        
+    } catch (error) {
+        console.log(`   ❌ Error reading server.js: ${error.message}`);
+    }
+}
+
+// 5. Test module loading
+console.log('\n5. MODULE LOADING TEST:');
+console.log('   Testing proxyHandler.js...');
+try {
+    const proxyPath = path.join(__dirname, 'bot', 'proxyHandler.js');
+    if (fs.existsSync(proxyPath)) {
+        const ProxyHandler = require(proxyPath);
+        console.log(`   ✅ proxyHandler.js loaded`);
+        
+        // Test instantiation
+        const handler = new ProxyHandler();
+        console.log(`   ✅ ProxyHandler instantiated: ${handler.constructor.name}`);
+        
+        // Check methods
+        const requiredMethods = ['initialize', 'getProxyForSession', 'updateAllProxies'];
+        requiredMethods.forEach(method => {
+            if (typeof handler[method] === 'function') {
+                console.log(`   Method ${method}: ✅ Available`);
+            } else {
+                console.log(`   Method ${method}: ❌ Missing`);
+            }
+        });
+    } else {
+        console.log(`   ❌ proxyHandler.js not found at ${proxyPath}`);
+    }
+} catch (error) {
+    console.log(`   ❌ Error loading proxyHandler: ${error.message}`);
+}
+
+console.log('\n6. ENVIRONMENT CHECK:');
+console.log(`   NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
+console.log(`   PORT: ${process.env.PORT || 'not set'}`);
+console.log(`   PUPPETEER_EXECUTABLE_PATH: ${process.env.PUPPETEER_EXECUTABLE_PATH || 'not set'}`);
+console.log(`   Node Version: ${process.version}`);
+console.log(`   Platform: ${process.platform}`);
+
+console.log('\n===============================');
+console.log('SUMMARY:');
+console.log('Run these commands to fix issues:');
+console.log('1. mkdir -p bot public data');
+console.log('2. cp *.js bot/ (if files are in root)');
+console.log('3. npm install');
+console.log('4. node check-integration.js (to verify)');
+console.log('5. npm start');
