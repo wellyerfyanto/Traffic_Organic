@@ -1,6 +1,6 @@
 FROM node:18-alpine
 
-# Install Chromium for Puppeteer
+# Install Chromium dan dependencies
 RUN apk add --no-cache \
     chromium \
     nss \
@@ -11,44 +11,47 @@ RUN apk add --no-cache \
     font-noto-emoji \
     && rm -rf /var/cache/apk/*
 
-# Set environment variables for Puppeteer
+# Set environment variables
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
     NODE_ENV=production \
     PORT=3000
 
-# Create app directory
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# GANTI INI: npm install bukan npm ci
-RUN npm install --omit=dev --legacy-peer-deps
+# Install dependencies
+RUN npm ci --only=production
 
-# Copy app source
+# Copy app dengan fix untuk proxyHandler.js
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p bot public data
-
-# Move bot files if they exist in root
-RUN if [ -f "proxyHandler.js" ]; then mv proxyHandler.js bot/; fi && \
-    if [ -f "trafficGenerator.js" ]; then mv trafficGenerator.js bot/; fi && \
-    if [ -f "keywordAnalyzer.js" ]; then mv keywordAnalyzer.js bot/; fi && \
-    if [ -f "botHandler.js" ]; then mv botHandler.js bot/; fi
+# Run fix script sebelum start
+RUN echo "🔧 Applying Railway fixes..." && \
+    # Fix proxyHandler.js
+    sed -i "s/new File(/\/\* File removed for Node.js \*\/ null \&\& (/g" bot/proxyHandler.js && \
+    sed -i "s/File\./fs\./g" bot/proxyHandler.js && \
+    sed -i "s/require('fs')\.promises/require('fs').promises/g" bot/proxyHandler.js && \
+    # Ensure proper fetch
+    echo "const fetch = global.fetch || require('node-fetch');" > bot/fetch-polyfill.js && \
+    # Create directories
+    mkdir -p bot public data
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S botuser -u 1001
+    adduser -S railway -u 1001
 
 # Change ownership
-RUN chown -R botuser:nodejs /app
+RUN chown -R railway:nodejs /app
 
 # Switch to non-root user
-USER botuser
+USER railway
 
-# Expose port
 EXPOSE 3000
 
-# Start the application
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+
 CMD ["node", "server.js"]
