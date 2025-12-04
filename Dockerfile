@@ -22,7 +22,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm install --only=production
 
 # Copy app dengan fix untuk proxyHandler.js
 COPY . .
