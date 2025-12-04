@@ -50,7 +50,8 @@ try {
 }
 
 const cheerio = require('cheerio');
-const fs = require('fs').promises;
+const fs = require('fs');
+const fsp = fs.promises;
 const path = require('path');
 
 class ProxyHandler2025 {
@@ -209,7 +210,7 @@ class ProxyHandler2025 {
     async ensureCacheDirectory() {
         try {
             const dataDir = path.join(__dirname, '..', 'data');
-            await fs.mkdir(dataDir, { recursive: true });
+            await fsp.mkdir(dataDir, { recursive: true });
         } catch (error) {
             console.log('⚠️ Cache directory error:', error.message);
         }
@@ -217,13 +218,13 @@ class ProxyHandler2025 {
 
     async loadCache() {
         try {
-            const cacheExists = await fs.access(this.cacheFile).then(() => true).catch(() => false);
+            const cacheExists = await fsp.access(this.cacheFile).then(() => true).catch(() => false);
             if (!cacheExists) {
                 console.log('📁 No cache file found');
                 return false;
             }
             
-            const data = JSON.parse(await fs.readFile(this.cacheFile, 'utf8'));
+            const data = JSON.parse(await fsp.readFile(this.cacheFile, 'utf8'));
             const cacheTime = new Date(data.lastUpdate).getTime();
             const now = Date.now();
             
@@ -279,7 +280,7 @@ class ProxyHandler2025 {
                 }
             };
             
-            await fs.writeFile(this.cacheFile, JSON.stringify(cacheData, null, 2));
+            await fsp.writeFile(this.cacheFile, JSON.stringify(cacheData, null, 2));
             console.log(`💾 Saved cache: ${workingFresh.length} fresh, ${workingVPN.length} VPN`);
             
         } catch (error) {
