@@ -138,10 +138,10 @@ try {
   };
 
   // Load semua modul
-  ProxyHandler = loadModule('proxyHandler.js');
-  KeywordAnalyzer = loadModule('keywordAnalyzer.js');
-  BotHandler = loadModule('botHandler.js');
-  TrafficGenerator = loadModule('trafficGenerator.js');
+  ProxyHandler = loadModule('./bot/proxyHandler.js');
+  KeywordAnalyzer = loadModule('./bot/keywordAnalyzer.js');
+  BotHandler = loadModule('./bot/botHandler.js');
+  TrafficGenerator = loadModule('./bot/trafficGenerator.js');
 
   if (!ProxyHandler) {
     console.error('❌ CRITICAL: proxyHandler.js not loaded');
