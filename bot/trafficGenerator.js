@@ -163,13 +163,19 @@ class TrafficGenerator {
     // ==================== PURE ORGANIC SESSION ====================
     async startOrganicSession(config) {
         const sessionId = `organic_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        
+
         // Log keyword mode
         const keywordSource = config.keywordMode === 'manual' ? 'MANUAL' : 'AUTO';
+        const sessionType = config.isAutoLoop ? 'AUTO-LOOP' : 'MANUAL';
+    
         this.log(sessionId, 'ORGANIC_INIT', 
-            `Starting PURE organic session (Keywords: ${keywordSource})`);
-        
+            `Starting ${sessionType} session (Keywords: ${keywordSource})`);
+    
         this.totalSessions++;
+    
+        // ... rest of the code remains the same ...
+
+        
         
         // Validate config
         if (!config.searchEngine) {
