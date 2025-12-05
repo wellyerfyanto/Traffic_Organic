@@ -54,7 +54,7 @@ const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
 
-class ProxyHandler2025 {
+class ProxyHandler {
     constructor() {
         // ==================== PROXY POOLS ====================
         this.freshProxies = [];    // IP:Port proxies (HTTP/HTTPS/SOCKS)
@@ -167,7 +167,7 @@ class ProxyHandler2025 {
         this.cacheFile = path.join(__dirname, '..', 'data', 'proxy-cache.json');
         this.ensureCacheDirectory();
         
-        console.log('🔄 ProxyHandler2025 initialized');
+        console.log('🔄 ProxyHandler initialized');
     }
 
     // ==================== CORE INITIALIZATION ====================
@@ -1284,4 +1284,4 @@ class ProxyHandler2025 {
     }
 }
 
-module.exports = ProxyHandler2025;
+module.exports = ProxyHandler;
