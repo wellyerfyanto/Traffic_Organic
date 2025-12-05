@@ -40,7 +40,7 @@
     "search-engine-traffic"
   ],
   "author": "Organic Traffic Team",
-  "license": "MIT"{
+  "license": "MIT"
   "scripts": {
     "start": "node --no-experimental-fetch --max-http-header-size=16384 --trace-warnings server.js",
     "dev": "nodemon --no-experimental-fetch --max-http-header-size=16384 server.js"
