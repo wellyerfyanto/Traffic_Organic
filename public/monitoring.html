@@ -421,6 +421,26 @@
                     Loading proxy statistics...
                 </div>
             </div>
+            <!-- AUTO-LOOP CARD -->
+            <div class="card">
+                <div class="card-title">🔁 Auto-Loop System</div>
+                <div id="autoLoopStatus">
+                    Loading auto-loop status...
+                </div>
+                <div class="btn-group" style="margin-top: 15px;">
+                    <button class="btn btn-success" onclick="startAutoLoop()">
+                        ▶ Start Auto-Loop
+                    </button>
+                    <button class="btn btn-danger" onclick="stopAutoLoop()">
+                        ⏹ Stop Auto-Loop
+                    </button>
+                </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-info" onclick="showAutoLoopConfig()">
+                        ⚙️ Configure Auto-Loop
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- DETAILED SECTIONS -->
@@ -1012,5 +1032,275 @@ contoh: crypto news, bitcoin today, trading 2024"></textarea>
             }
         }
     </script>
+    <!-- AUTO-LOOP CONFIG MODAL -->
+<div id="autoLoopModal" class="modal">
+    <div class="modal-content">
+        <h2 class="modal-title">⚙️ Configure Auto-Loop</h2>
+        <form id="autoLoopForm">
+            <div class="form-group">
+                <label for="loopTargetUrl">Target URL</label>
+                <input type="url" id="loopTargetUrl" class="form-control" 
+                       value="https://cryptoajah.blogspot.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="loopInterval">Interval (minutes)</label>
+                <select id="loopInterval" class="form-control">
+                    <option value="900000">15 minutes</option>
+                    <option value="1800000" selected>30 minutes</option>
+                    <option value="2700000">45 minutes</option>
+                    <option value="3600000">60 minutes</option>
+                    <option value="7200000">2 hours</option>
+                    <option value="14400000">4 hours</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="maxSessions">Max Concurrent Sessions</label>
+                <select id="maxSessions" class="form-control">
+                    <option value="1">1 session</option>
+                    <option value="2">2 sessions</option>
+                    <option value="3" selected>3 sessions</option>
+                    <option value="5">5 sessions</option>
+                    <option value="10">10 sessions</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="loopProxyType">Proxy Type</label>
+                <select id="loopProxyType" class="form-control">
+                    <option value="vpn" selected>🔒 VPN (Recommended)</option>
+                    <option value="fresh">🆕 Fresh Proxies</option>
+                    <option value="web">🌐 Web Gateway</option>
+                </select>
+            </div>
+            
+            <div class="btn-group" style="margin-top: 30px;">
+                <button type="button" class="btn btn-danger" onclick="closeAutoLoopModal()">Cancel</button>
+                <button type="submit" class="btn btn-success">Save & Start</button>
+            </div>
+        </form>
+    </div>
+</div>
+    // Auto-loop functions
+async function fetchAutoLoopStatus() {
+    try {
+        const response = await fetch('/api/auto-loop/status');
+        const data = await response.json();
+        
+        if (data.success) {
+            updateAutoLoopStatus(data);
+        }
+    } catch (error) {
+        console.error('Auto-loop fetch error:', error);
+    }
+}
+
+function updateAutoLoopStatus(data) {
+    const config = data.config;
+    const stats = data.stats;
+    
+    let statusHtml = `
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-label">Status</div>
+                <div class="stat-value" style="font-size: 1.2rem;">
+                    ${config.enabled ? '✅ ACTIVE' : '⏸️ PAUSED'}
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Interval</div>
+                <div class="stat-value">${Math.round(config.interval / 60000)}m</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Max Sessions</div>
+                <div class="stat-value">${config.maxSessions}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Started</div>
+                <div class="stat-value">${stats.sessionsStarted || 0}</div>
+            </div>
+        </div>
+    `;
+    
+    if (config.enabled && stats.nextRunIn > 0) {
+        const nextRunMins = Math.round(stats.nextRunIn / 60000);
+        statusHtml += `
+            <div style="margin-top: 15px; background: rgba(67, 97, 238, 0.1); padding: 10px; border-radius: 8px;">
+                <strong>Next run:</strong> In ${nextRunMins} minutes
+                <br>
+                <small>Last run: ${config.lastRun ? new Date(config.lastRun).toLocaleTimeString() : 'Never'}</small>
+            </div>
+        `;
+    }
+    
+    document.getElementById('autoLoopStatus').innerHTML = statusHtml;
+}
+
+function showAutoLoopConfig() {
+    // Load current config first
+    fetch('/api/auto-loop/status')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const config = data.config;
+                document.getElementById('loopTargetUrl').value = config.targetUrl;
+                document.getElementById('loopInterval').value = config.interval;
+                document.getElementById('maxSessions').value = config.maxSessions;
+            }
+        });
+    
+    document.getElementById('autoLoopModal').style.display = 'flex';
+}
+
+function closeAutoLoopModal() {
+    document.getElementById('autoLoopModal').style.display = 'none';
+}
+
+async function startAutoLoop() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="loader"></span> Starting...';
+    
+    try {
+        const response = await fetch('/api/auto-loop/control', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'start'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Auto-loop started!');
+            fetchAutoLoopStatus();
+        } else {
+            alert(`❌ Error: ${data.error}`);
+        }
+    } catch (error) {
+        alert(`❌ Network error: ${error.message}`);
+    } finally {
+        btn.innerHTML = originalText;
+    }
+}
+
+async function stopAutoLoop() {
+    if (!confirm('Stop auto-loop system?')) return;
+    
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="loader"></span> Stopping...';
+    
+    try {
+        const response = await fetch('/api/auto-loop/control', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'stop'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Auto-loop stopped');
+            fetchAutoLoopStatus();
+        }
+    } catch (error) {
+        alert(`❌ Error: ${error.message}`);
+    } finally {
+        btn.innerHTML = originalText;
+    }
+}
+
+// Setup auto-loop form
+document.getElementById('autoLoopForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const targetUrl = document.getElementById('loopTargetUrl').value;
+    const interval = parseInt(document.getElementById('loopInterval').value);
+    const maxSessions = parseInt(document.getElementById('maxSessions').value);
+    const proxyType = document.getElementById('loopProxyType').value;
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="loader"></span> Saving...';
+    
+    try {
+        const response = await fetch('/api/auto-loop/control', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'update',
+                config: {
+                    targetUrl,
+                    interval,
+                    maxSessions,
+                    proxyType,
+                    enabled: true
+                }
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Auto-loop configuration saved and started!');
+            closeAutoLoopModal();
+            fetchAutoLoopStatus();
+        } else {
+            alert(`❌ Error: ${data.error}`);
+        }
+    } catch (error) {
+        alert(`❌ Network error: ${error.message}`);
+    } finally {
+        submitBtn.innerHTML = originalText;
+    }
+});
+
+// Update refreshAllData untuk include auto-loop status
+async function refreshAllData() {
+    const refreshBtn = document.querySelector('#refreshIcon');
+    refreshBtn.textContent = '🔄';
+    
+    try {
+        await Promise.all([
+            fetchSystemHealth(),
+            fetchProxyStatus(),
+            fetchSessions(),
+            fetchAutoLoopStatus() // TAMBAH INI
+        ]);
+        
+        refreshBtn.textContent = '✅';
+        document.getElementById('updateTime').textContent = new Date().toLocaleTimeString();
+        
+        setTimeout(() => {
+            refreshBtn.textContent = '🔄';
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Refresh error:', error);
+        refreshBtn.textContent = '❌';
+    }
+}
+
+// Update auto-refresh untuk include auto-loop
+function startAutoRefresh() {
+    if (refreshInterval) clearInterval(refreshInterval);
+    
+    refreshInterval = setInterval(() => {
+        if (autoRefresh) {
+            fetchSystemHealth();
+            fetchAutoLoopStatus(); // Update auto-loop status setiap 10 detik
+            
+            // Only full refresh every 30 seconds
+            if (Math.floor(Date.now() / 1000) % 30 === 0) {
+                refreshAllData();
+            }
+        }
+    }, 10000); // 10 seconds
+}
 </body>
 </html>
