@@ -131,6 +131,169 @@ let moduleLoadStatus = {
   trafficGenerator: 'pending',
   botManager: 'pending'
 };
+// ==================== AUTO-LOOP SYSTEM ====================
+let autoLoop = {
+  enabled: process.env.AUTO_LOOP === 'true',
+  interval: parseInt(process.env.LOOP_INTERVAL) || 2700000, // 45 minutes
+  maxSessions: parseInt(process.env.MAX_SESSIONS) || 3,
+  targetUrl: process.env.DEFAULT_TARGET_URL || 'https://cryptoajah.blogspot.com',
+  loopInterval: null,
+  lastRun: null,
+  nextRun: null,
+  sessionsStarted: 0
+};
+
+// Start auto-loop if enabled
+const startAutoLoop = async () => {
+  if (!autoLoop.enabled || !botManager || autoLoop.loopInterval) {
+    console.log('⏸️ Auto-loop disabled or already running');
+    return;
+  }
+  
+  console.log('🔁 Starting auto-loop system...');
+  console.log(`   Target: ${autoLoop.targetUrl}`);
+  console.log(`   Interval: ${autoLoop.interval / 60000} minutes`);
+  console.log(`   Max Sessions: ${autoLoop.maxSessions}`);
+  
+  autoLoop.loopInterval = setInterval(async () => {
+    try {
+      // Check current active sessions
+      const allSessions = botManager ? botManager.getAllSessions() : [];
+      const activeSessions = allSessions.filter(s => s.status === 'running').length;
+      
+      if (activeSessions >= autoLoop.maxSessions) {
+        console.log(`⏸️ Max sessions (${autoLoop.maxSessions}) reached, skipping auto-loop`);
+        return;
+      }
+      
+      console.log('🔄 Auto-loop: Starting new session...');
+      autoLoop.lastRun = new Date();
+      autoLoop.nextRun = new Date(Date.now() + autoLoop.interval);
+      
+      const sessionConfig = {
+        targetUrl: autoLoop.targetUrl,
+        proxyType: 'vpn', // Default untuk auto-loop
+        deviceType: Math.random() > 0.5 ? 'desktop' : 'mobile',
+        searchEngine: Math.random() > 0.5 ? 'google' : 'bing',
+        keywordMode: 'auto',
+        isAutoLoop: true, // Flag khusus untuk auto-loop
+        maxKeywords: 3,
+        enableSubUrl: true
+      };
+      
+      const sessionId = await botManager.startOrganicSession(sessionConfig);
+      autoLoop.sessionsStarted++;
+      
+      console.log(`✅ Auto-loop session started: ${sessionId.substring(0, 12)}...`);
+      console.log(`   Total auto sessions: ${autoLoop.sessionsStarted}`);
+      
+    } catch (error) {
+      console.error('❌ Auto-loop error:', error.message);
+    }
+  }, autoLoop.interval);
+  
+  // Run immediately on startup (after delay)
+  setTimeout(async () => {
+    if (autoLoop.enabled && botManager) {
+      console.log('🏃 Auto-loop: First run starting now...');
+      autoLoop.lastRun = new Date();
+      autoLoop.nextRun = new Date(Date.now() + autoLoop.interval);
+      
+      const sessionConfig = {
+        targetUrl: autoLoop.targetUrl,
+        proxyType: 'vpn',
+        deviceType: 'desktop',
+        searchEngine: 'google',
+        keywordMode: 'auto',
+        isAutoLoop: true,
+        maxKeywords: 3
+      };
+      
+      try {
+        const sessionId = await botManager.startOrganicSession(sessionConfig);
+        autoLoop.sessionsStarted++;
+        console.log(`✅ First auto-loop session: ${sessionId.substring(0, 12)}...`);
+      } catch (error) {
+        console.error('❌ First auto-loop failed:', error.message);
+      }
+    }
+  }, 30000); // Wait 30 seconds for system to initialize
+};
+
+// Update the /api/auto-loop/status endpoint
+app.get('/api/auto-loop/status', (req, res) => {
+  res.json({
+    success: true,
+    config: autoLoop,
+    stats: {
+      sessionsStarted: autoLoop.sessionsStarted,
+      isRunning: !!autoLoop.loopInterval,
+      nextRunIn: autoLoop.nextRun ? Math.max(0, autoLoop.nextRun - Date.now()) : 0
+    }
+  });
+});
+
+// Endpoint to control auto-loop
+app.post('/api/auto-loop/control', async (req, res) => {
+  try {
+    const { action, config } = req.body;
+    
+    switch (action) {
+      case 'start':
+        if (autoLoop.loopInterval) {
+          clearInterval(autoLoop.loopInterval);
+        }
+        
+        if (config) {
+          autoLoop = { ...autoLoop, ...config, enabled: true };
+        } else {
+          autoLoop.enabled = true;
+        }
+        
+        await startAutoLoop();
+        break;
+        
+      case 'stop':
+        autoLoop.enabled = false;
+        if (autoLoop.loopInterval) {
+          clearInterval(autoLoop.loopInterval);
+          autoLoop.loopInterval = null;
+        }
+        break;
+        
+      case 'update':
+        if (config) {
+          autoLoop = { ...autoLoop, ...config };
+          
+          // Restart with new interval if running
+          if (autoLoop.loopInterval) {
+            clearInterval(autoLoop.loopInterval);
+            await startAutoLoop();
+          }
+        }
+        break;
+        
+      default:
+        return res.status(400).json({ success: false, error: 'Invalid action' });
+    }
+    
+    res.json({
+      success: true,
+      message: `Auto-loop ${action}ed`,
+      config: autoLoop
+    });
+    
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Start auto-loop on server initialization
+setTimeout(() => {
+  if (autoLoop.enabled) {
+    startAutoLoop();
+  }
+}, 10000); // Delay startup
 
 // Create comprehensive fallback handlers
 const createFallbackHandlers = () => {
