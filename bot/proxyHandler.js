@@ -1,6 +1,56 @@
 // ==================== PROXY HANDLER (FULL FEATURES) ====================
 // Fixed for Node.js 18+ - No 'File' object usage
+// ==================== FIX FOR NODE.JS - FILE IS NOT DEFINED ====================
+// Stub untuk objek File yang tidak ada di Node.js
+if (typeof global.File === 'undefined') {
+    global.File = class File {
+        constructor(blobParts, fileName, options) {
+            this.name = fileName;
+            this.size = blobParts.reduce((acc, part) => acc + (part.length || 0), 0);
+            this.type = options?.type || '';
+            this.lastModified = options?.lastModified || Date.now();
+        }
+        
+        slice(start, end, contentType) {
+            return new File([], '', { type: contentType || '' });
+        }
+        
+        text() {
+            return Promise.resolve('');
+        }
+        
+        arrayBuffer() {
+            return Promise.resolve(new ArrayBuffer(0));
+        }
+        
+        stream() {
+            const { Readable } = require('stream');
+            return Readable.from([]);
+        }
+    };
+}
 
+// Stub untuk Blob jika belum ada
+if (typeof global.Blob === 'undefined') {
+    global.Blob = class Blob {
+        constructor(blobParts, options) {
+            this.size = blobParts.reduce((acc, part) => acc + (part.length || 0), 0);
+            this.type = options?.type || '';
+        }
+        
+        slice(start, end, contentType) {
+            return new Blob([], { type: contentType || '' });
+        }
+        
+        text() {
+            return Promise.resolve('');
+        }
+        
+        arrayBuffer() {
+            return Promise.resolve(new ArrayBuffer(0));
+        }
+    };
+}
 const fs = require('fs');
 const path = require('path');
 const fsp = fs.promises;
