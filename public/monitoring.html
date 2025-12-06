@@ -1679,5 +1679,170 @@ contoh: crypto news, bitcoin today, trading 2024"></textarea>
             
             const diffHours = Math.floor(diffMins / 60);
             if (diffHours < 24) return `${diffHours}h ago`;
+                        const diffDays = Math.floor(diffHours / 24);
+            if (diffDays < 30) return `${diffDays}d ago`;
+            
+            const diffMonths = Math.floor(diffDays / 30);
+            if (diffMonths < 12) return `${diffMonths}mo ago`;
+            
+            return `${Math.floor(diffDays / 365)}y ago`;
+        }
+
+        // Get country CSS class for flags
+        function getCountryClass(countryCode) {
+            const countryMap = {
+                'us': 'us',
+                'united states': 'us',
+                'usa': 'us',
+                'uk': 'uk',
+                'united kingdom': 'uk',
+                'gb': 'uk',
+                'germany': 'de',
+                'de': 'de',
+                'germany': 'de',
+                'netherlands': 'nl',
+                'nl': 'nl',
+                'japan': 'jp',
+                'jp': 'jp',
+                'singapore': 'sg',
+                'sg': 'sg',
+                'tor': 'tor'
+            };
+            
+            return countryMap[countryCode.toLowerCase()] || 'unknown';
+        }
+
+        // Add proxy to textarea
+        function addProxyToTextArea(type, proxy) {
+            const textarea = document.getElementById(`${type}ProxyText`);
+            if (textarea) {
+                textarea.value += `${proxy.host}:${proxy.port}\n`;
+            }
+        }
+
+        // Initialize country flags for VPN
+        function initializeCountryFlags() {
+            const flags = ['us', 'uk', 'de', 'nl', 'jp', 'sg'];
+            flags.forEach(flag => {
+                if (!document.querySelector(`.country-flag.${flag}`)) {
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        .country-flag.${flag} {
+                            background-image: url('https://flagcdn.com/w20/${flag}.png');
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            });
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            initializeCountryFlags();
+            refreshAllData();
+        });
+
+        // Handle page visibility change
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                refreshAllData();
+            }
+        });
+
+        // Export session data
+        function exportSessionData() {
+            const sessions = Array.from(document.querySelectorAll('#sessionsTable tbody tr'));
+            const data = sessions.map(row => {
+                const cells = row.querySelectorAll('td');
+                return {
+                    sessionId: cells[0].textContent.trim(),
+                    target: cells[1].textContent.trim(),
+                    proxyType: cells[2].textContent.trim(),
+                    status: cells[3].textContent.trim(),
+                    duration: cells[4].textContent.trim(),
+                    started: cells[5].textContent.trim()
+                };
+            });
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `session_data_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('✅ Session data exported as JSON!');
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl + R = Refresh
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                refreshAllData();
+            }
+            
+            // Ctrl + S = Start session
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                showSessionModal();
+            }
+            
+            // Ctrl + P = Proxy list
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                showProxyListModal();
+            }
+            
+            // Escape = Close modals
+            if (e.key === 'Escape') {
+                closeModal();
+                closeAutoLoopModal();
+                closeProxyDetailsModal();
+                closeProxyListModal();
+            }
+        });
+
+        // Add export button to sessions table
+        function addExportButton() {
+            const sessionsHeader = document.querySelector('.card-title');
+            if (sessionsHeader && !document.querySelector('#exportSessionsBtn')) {
+                const exportBtn = document.createElement('button');
+                exportBtn.id = 'exportSessionsBtn';
+                exportBtn.className = 'btn btn-info';
+                exportBtn.style.marginLeft = '15px';
+                exportBtn.innerHTML = '📊 Export Data';
+                exportBtn.onclick = exportSessionData;
+                sessionsHeader.appendChild(exportBtn);
+            }
+        }
+
+        // Initialize advanced features
+        setTimeout(() => {
+            addExportButton();
+            
+            // Add keyboard shortcuts hint
+            const hint = document.createElement('div');
+            hint.style.cssText = `
+                position: fixed;
+                bottom: 10px;
+                right: 10px;
+                background: rgba(0,0,0,0.8);
+                color: #ccc;
+                padding: 8px 12px;
+                border-radius: 6px;
+                font-size: 11px;
+                z-index: 1000;
+            `;
+            hint.innerHTML = 'Keyboard: Ctrl+R=Refresh, Ctrl+S=New Session, Ctrl+P=Proxies';
+            document.body.appendChild(hint);
+        }, 2000);
+
+    </script>
+</body>
+</html>
             
            
