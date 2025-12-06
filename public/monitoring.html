@@ -421,26 +421,53 @@
                     Loading proxy statistics...
                 </div>
             </div>
-            <!-- AUTO-LOOP CARD -->
-            <div class="card">
-                <div class="card-title">🔁 Auto-Loop System</div>
-                <div id="autoLoopStatus">
-                    Loading auto-loop status...
-                </div>
-                <div class="btn-group" style="margin-top: 15px;">
-                    <button class="btn btn-success" onclick="startAutoLoop()">
-                        ▶ Start Auto-Loop
-                    </button>
-                    <button class="btn btn-danger" onclick="stopAutoLoop()">
-                        ⏹ Stop Auto-Loop
-                    </button>
-                </div>
-                <div style="margin-top: 15px;">
-                    <button class="btn btn-info" onclick="showAutoLoopConfig()">
-                        ⚙️ Configure Auto-Loop
-                    </button>
-                </div>
+            <!-- GANTI bagian modal auto-loop dengan input manual -->
+<div id="autoLoopModal" class="modal">
+    <div class="modal-content">
+        <h2 class="modal-title">⚙️ Configure Auto-Loop</h2>
+        <form id="autoLoopForm">
+            <div class="form-group">
+                <label for="loopTargetUrl">Target URL</label>
+                <input type="url" id="loopTargetUrl" class="form-control" 
+                       value="https://cryptoajah.blogspot.com" required>
             </div>
+            
+            <div class="form-group">
+                <label for="loopInterval">Interval (minutes)</label>
+                <input type="number" id="loopInterval" class="form-control" 
+                       value="30" min="1" max="1440" step="1" required
+                       placeholder="Enter interval in minutes (1-1440)">
+                <small>Enter any number between 1 minute (5 seconds) to 24 hours (1440 minutes)</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="maxSessions">Max Concurrent Sessions</label>
+                <select id="maxSessions" class="form-control">
+                    <option value="1">1 session</option>
+                    <option value="2">2 sessions</option>
+                    <option value="3" selected>3 sessions</option>
+                    <option value="5">5 sessions</option>
+                    <option value="10">10 sessions</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="loopProxyType">Proxy Type</label>
+                <select id="loopProxyType" class="form-control">
+                    <option value="vpn" selected>🔒 VPN (Recommended)</option>
+                    <option value="fresh">🆕 Fresh Proxies</option>
+                    <option value="web">🌐 Web Gateway</option>
+                    <option value="direct">⚡ Direct Connection</option>
+                </select>
+            </div>
+            
+            <div class="btn-group" style="margin-top: 30px;">
+                <button type="button" class="btn btn-danger" onclick="closeAutoLoopModal()">Cancel</button>
+                <button type="submit" class="btn btn-success">Save & Start</button>
+            </div>
+        </form>
+    </div>
+</div>
         </div>
 
         <!-- DETAILED SECTIONS -->
@@ -1146,79 +1173,130 @@ contoh: crypto news, bitcoin today, trading 2024"></textarea>
             document.getElementById('autoLoopStatus').innerHTML = statusHtml;
         }
 
-        function showAutoLoopConfig() {
-            // Load current config first
-            fetch('/api/auto-loop/status')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const config = data.config;
-                        document.getElementById('loopTargetUrl').value = config.targetUrl;
-                        document.getElementById('loopInterval').value = config.interval;
-                        document.getElementById('maxSessions').value = config.maxSessions;
-                    }
-                });
-            
-            document.getElementById('autoLoopModal').style.display = 'flex';
-        }
-
-        async function startAutoLoop() {
-            const btn = event.target;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<span class="loader"></span> Starting...';
-            
-            try {
-                const response = await fetch('/api/auto-loop/control', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'start'
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert('✅ Auto-loop started!');
-                    fetchAutoLoopStatus();
-                } else {
-                    alert(`❌ Error: ${data.error}`);
-                }
-            } catch (error) {
-                alert(`❌ Network error: ${error.message}`);
-            } finally {
-                btn.innerHTML = originalText;
+// Update fungsi showAutoLoopConfig
+function showAutoLoopConfig() {
+    // Load current config first
+    fetch('/api/auto-loop/status')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const config = data.config;
+                document.getElementById('loopTargetUrl').value = config.targetUrl;
+                document.getElementById('loopInterval').value = config.intervalMinutes || 30;
+                document.getElementById('maxSessions').value = config.maxSessions || 3;
+                document.getElementById('loopProxyType').value = config.proxyType || 'vpn';
             }
-        }
+        })
+        .catch(error => {
+            console.error('Error loading auto-loop config:', error);
+            // Set defaults
+            document.getElementById('loopTargetUrl').value = 'https://cryptoajah.blogspot.com';
+            document.getElementById('loopInterval').value = 30;
+            document.getElementById('maxSessions').value = 3;
+            document.getElementById('loopProxyType').value = 'vpn';
+        });
+    
+    document.getElementById('autoLoopModal').style.display = 'flex';
+}
 
-        async function stopAutoLoop() {
-            if (!confirm('Stop auto-loop system?')) return;
-            
-            const btn = event.target;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<span class="loader"></span> Stopping...';
-            
-            try {
-                const response = await fetch('/api/auto-loop/control', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'stop'
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert('✅ Auto-loop stopped');
-                    fetchAutoLoopStatus();
+// Update fungsi updateAutoLoopStatus untuk menampilkan interval dalam menit
+function updateAutoLoopStatus(data) {
+    const config = data.config;
+    const stats = data.stats;
+    
+    let statusHtml = `
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-label">Status</div>
+                <div class="stat-value" style="font-size: 1.2rem;">
+                    ${config.isRunning ? '✅ ACTIVE' : '⏸️ PAUSED'}
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Interval</div>
+                <div class="stat-value">${config.intervalMinutes || 30}m</div>
+                <small>${config.enabled ? 'Enabled' : 'Disabled'}</small>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Max Sessions</div>
+                <div class="stat-value">${config.maxSessions || 3}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Started</div>
+                <div class="stat-value">${stats.sessionsStarted || 0}</div>
+            </div>
+        </div>
+    `;
+    
+    if (config.isRunning && stats.nextRunInMinutes > 0) {
+        statusHtml += `
+            <div style="margin-top: 15px; background: rgba(67, 97, 238, 0.1); padding: 10px; border-radius: 8px;">
+                <strong>Next run:</strong> In ${stats.nextRunInMinutes} minutes
+                <br>
+                <small>Last run: ${config.lastRun ? new Date(config.lastRun).toLocaleTimeString() : 'Never'}</small>
+            </div>
+        `;
+    }
+    
+    // Add config summary
+    statusHtml += `
+        <div style="margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.7);">
+            <strong>Config:</strong> ${config.targetUrl ? config.targetUrl.replace('https://', '') : 'N/A'} | 
+            Proxy: ${config.proxyType || 'vpn'} | 
+            Interval: ${config.intervalMinutes || 30} minutes
+        </div>
+    `;
+    
+    
+// Update form submission handler
+document.getElementById('autoLoopForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const targetUrl = document.getElementById('loopTargetUrl').value;
+    const intervalMinutes = parseInt(document.getElementById('loopInterval').value);
+    const maxSessions = parseInt(document.getElementById('maxSessions').value);
+    const proxyType = document.getElementById('loopProxyType').value;
+    
+    // Validate interval
+    if (intervalMinutes < 1 || intervalMinutes > 1440) {
+        alert('❌ Please enter an interval between 1 and 1440 minutes (24 hours)');
+        return;
+    }
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="loader"></span> Saving...';
+    
+    try {
+        const response = await fetch('/api/auto-loop/control', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'start',
+                config: {
+                    targetUrl,
+                    intervalMinutes,
+                    maxSessions,
+                    proxyType
                 }
-            } catch (error) {
-                alert(`❌ Error: ${error.message}`);
-            } finally {
-                btn.innerHTML = originalText;
-            }
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(`✅ Auto-loop configuration saved and started!\nInterval: ${intervalMinutes} minutes`);
+            closeAutoLoopModal();
+            fetchAutoLoopStatus();
+        } else {
+            alert(`❌ Error: ${data.error}`);
         }
+    } catch (error) {
+        alert(`❌ Network error: ${error.message}`);
+    } finally {
+        submitBtn.innerHTML = originalText;
+    }
+});
 
         // Utility functions
         function formatTimeAgo(dateString) {
