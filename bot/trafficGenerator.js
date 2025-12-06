@@ -955,14 +955,21 @@ class TrafficGenerator {
 
     // ==================== UTILITY METHODS ====================
     getStealthUserAgent(deviceType) {
-        // Use user-agents library for realistic UAs
-        const userAgent = new UserAgent({
-            deviceCategory: deviceType === 'mobile' ? 'mobile' : 'desktop',
-            platform: deviceType === 'mobile' ? 'Android' : 'Win32'
-        });
-        
-        return userAgent.toString();
-    }
+  // Opsi 2: Jika ingin spesifik, gunakan parameter yang DITERIMA library
+  const userAgent = new UserAgent({
+    deviceCategory: deviceType === 'mobile' ? 'mobile' : 'desktop',
+    // Pilih salah satu platform yang valid: 'Win32', 'MacIntel', 'Linux x86_64', 'Android', 'iOS'
+    platform: deviceType === 'mobile' ? 'Android' : 'Win32'
+  });
+  // Fallback jika tetap gagal
+  if (!userAgent || !userAgent.toString()) {
+    console.warn('UserAgent library failed, using hardcoded fallback');
+    return deviceType === 'mobile' 
+      ? 'Mozilla/5.0 (Linux; Android 14; SM-S911B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36'
+      : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36';
+  }
+  return userAgent.toString();
+  }
 
     getRandomGoogleDomain() {
         const domains = [
