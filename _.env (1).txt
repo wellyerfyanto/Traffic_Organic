@@ -1,0 +1,36 @@
+# ==================== SERVER SETTINGS ====================
+PORT=3000
+NODE_ENV=development
+SESSION_SECRET=organic-traffic-bot-secret-2025
+
+# ==================== GOOGLE SPECIFIC SETTINGS ====================
+GOOGLE_DELAY_MULTIPLIER=2.5
+GOOGLE_MAX_KEYWORDS=3
+GOOGLE_SEARCH_VARIATION=true
+GOOGLE_USE_SUGGESTIONS=false
+GOOGLE_MAX_ATTEMPTS=3
+
+# ==================== CAPTCHA SOLVING ====================
+TWO_CAPTCHA_TOKEN=YOUR_API_KEY_HERE
+ANTI_CAPTCHA_TOKEN=YOUR_API_KEY_HERE
+
+# ==================== PROXY SETTINGS ====================
+PREMIUM_PROXY=false
+WEBSHARE_API_KEY=YOUR_KEY_HERE
+PROXYRACK_API_KEY=YOUR_KEY_HERE
+SMARTPROXY_API_KEY=YOUR_KEY_HERE
+
+# ==================== BROWSER SETTINGS ====================
+PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+PUPPETEER_HEADLESS=new
+PUPPETEER_TIMEOUT=90000
+
+# ==================== AUTO-LOOP SETTINGS ====================
+AUTO_LOOP=false
+DEFAULT_TARGET_URL=https://cryptoajah.blogspot.com
+DEFAULT_PROXY_TYPE=vpn
+
+# ==================== SECURITY SETTINGS ====================
+MAX_CONCURRENT_SESSIONS=5
+SESSION_TIMEOUT=1800000
+REQUEST_TIMEOUT=60000
