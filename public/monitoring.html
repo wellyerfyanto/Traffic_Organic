@@ -1821,6 +1821,379 @@ contoh: crypto news, bitcoin today, trading 2024"></textarea>
             hint.innerHTML = 'Keyboard: Ctrl+R=Refresh, Ctrl+S=Session, Ctrl+B=Batch, Ctrl+P=Proxies';
             document.body.appendChild(hint);
         }, 2000);
+        // Google Accounts Functions
+let googleAccountsData = null;
+
+function showGoogleAccountsModal() {
+    document.getElementById('googleAccountsModal').style.display = 'flex';
+    switchGoogleTab('accounts');
+    loadGoogleAccounts();
+}
+
+function closeGoogleAccountsModal() {
+    document.getElementById('googleAccountsModal').style.display = 'none';
+}
+
+function switchGoogleTab(tab) {
+    // Remove active class from all tabs
+    document.querySelectorAll('#googleAccountsModal .proxy-tab').forEach(t => {
+        t.classList.remove('active');
+    });
+    
+    // Remove active class from all content
+    document.querySelectorAll('#googleAccountsModal .proxy-tab-content').forEach(c => {
+        c.classList.remove('active');
+    });
+    
+    // Add active class to clicked tab
+    event.target.classList.add('active');
+    
+    // Show selected content
+    const contentId = 'google' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Tab';
+    document.getElementById(contentId).classList.add('active');
+    
+    // Load data if needed
+    if (tab === 'accounts') {
+        loadGoogleAccounts();
+    } else if (tab === 'templates') {
+        loadTemplates();
+    }
+}
+
+async function loadGoogleAccounts() {
+    try {
+        const response = await fetch('/api/google-accounts');
+        const data = await response.json();
+        
+        if (data.success) {
+            googleAccountsData = data.accounts;
+            renderGoogleAccountsTable(data.accounts);
+            updateGoogleAccountSelection(data.accounts);
+        }
+    } catch (error) {
+        console.error('Failed to load Google accounts:', error);
+        document.getElementById('googleAccountsBody').innerHTML = 
+            '<tr><td colspan="5">Error loading accounts</td></tr>';
+    }
+}
+
+function renderGoogleAccountsTable(accounts) {
+    let html = '';
+    
+    if (accounts.length === 0) {
+        html = '<tr><td colspan="5">No Google accounts added yet.</td></tr>';
+    } else {
+        accounts.forEach(account => {
+            const statusColor = account.status === 'active' ? '#06d6a0' : 
+                              account.status === 'suspicious' ? '#ffd166' : '#ef476f';
+            
+            const lastUsed = account.lastUsed ? 
+                formatTimeAgo(account.lastUsed) : 'Never';
+            
+            const successRate = account.successRate ? 
+                `${Math.round(account.successRate * 100)}%` : 'N/A';
+            
+            html += `
+                <tr>
+                    <td>
+                        <strong>${account.email}</strong><br>
+                        <small style="color: rgba(255,255,255,0.6);">
+                            ${account.accountType} • Used ${account.usageCount || 0} times
+                        </small>
+                    </td>
+                    <td>
+                        <span style="color: ${statusColor}; font-weight: bold;">
+                            ${account.status.toUpperCase()}
+                        </span><br>
+                        <small>${successRate} success rate</small>
+                    </td>
+                    <td>${account.usageCount || 0}</td>
+                    <td>${lastUsed}</td>
+                    <td>
+                        <button onclick="testAccount('${account.id}')" 
+                                class="btn btn-sm btn-info" style="margin: 2px;">
+                            🧪 Test
+                        </button>
+                        <button onclick="deleteAccount('${account.id}')" 
+                                class="btn btn-sm btn-danger" style="margin: 2px;">
+                            🗑️ Delete
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+    
+    document.getElementById('googleAccountsBody').innerHTML = html;
+}
+
+function updateGoogleAccountSelection(accounts) {
+    const select = document.getElementById('googleAccount');
+    
+    // Clear existing options except first two
+    while (select.options.length > 2) {
+        select.remove(2);
+    }
+    
+    // Add active accounts
+    accounts
+        .filter(acc => acc.status === 'active')
+        .forEach(account => {
+            const option = document.createElement('option');
+            option.value = account.id;
+            option.textContent = `${account.email} (${account.status})`;
+            select.appendChild(option);
+        });
+}
+
+// Toggle 2FA section
+document.getElementById('has2FA')?.addEventListener('change', function() {
+    const section = document.getElementById('backupCodesSection');
+    if (section) {
+        section.style.display = this.checked ? 'block' : 'none';
+    }
+});
+
+// Form submission for adding account
+document.getElementById('addGoogleAccountForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('googleEmail').value;
+    const password = document.getElementById('googlePassword').value;
+    const accountType = document.getElementById('accountType').value;
+    const has2FA = document.getElementById('has2FA').checked;
+    const backupCodes = document.getElementById('backupCodes').value;
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="loader"></span> Adding...';
+    
+    try {
+        const response = await fetch('/api/google-accounts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email,
+                password,
+                accountType,
+                has2FA,
+                backupCodes
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(`✅ Account added successfully!\nEmail: ${data.account.email}`);
+            switchGoogleTab('accounts');
+            loadGoogleAccounts();
+            document.getElementById('addGoogleAccountForm').reset();
+        } else {
+            alert(`❌ Error: ${data.error}`);
+        }
+    } catch (error) {
+        alert(`❌ Network error: ${error.message}`);
+    } finally {
+        submitBtn.innerHTML = originalText;
+    }
+});
+
+async function testAccount(accountId) {
+    if (!confirm('Test this Google account login?')) return;
+    
+    try {
+        const response = await fetch(`/api/google-accounts/test/${accountId}`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(`✅ Test result: ${data.testResult}`);
+            if (data.requires2FA) {
+                alert('⚠️ This account requires 2FA. Consider disabling 2FA or adding backup codes.');
+            }
+            loadGoogleAccounts(); // Refresh list
+        } else {
+            alert(`❌ Test failed: ${data.error}`);
+        }
+    } catch (error) {
+        alert(`❌ Network error: ${error.message}`);
+    }
+}
+
+async function deleteAccount(accountId) {
+    if (!confirm('Delete this Google account? This cannot be undone.')) return;
+    
+    try {
+        const response = await fetch(`/api/google-accounts/${accountId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Account deleted');
+            loadGoogleAccounts();
+        } else {
+            alert('❌ Failed to delete account');
+        }
+    } catch (error) {
+        alert(`❌ Network error: ${error.message}`);
+    }
+}
+
+async function testAllAccounts() {
+    if (!confirm('Test ALL Google accounts? This may take a while.')) return;
+    
+    try {
+        const response = await fetch('/api/google-accounts/test-all', {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            let message = 'Test Results:\n\n';
+            data.results.forEach(result => {
+                message += `${result.email}: ${result.status}\n`;
+            });
+            alert(message);
+            loadGoogleAccounts();
+        }
+    } catch (error) {
+        alert(`❌ Error: ${error.message}`);
+    }
+}
+
+async function refreshGoogleAccounts() {
+    await loadGoogleAccounts();
+    alert('✅ Google accounts refreshed');
+}
+
+async function createChromeTemplate() {
+    const templateName = prompt('Enter template name:', `template_${Date.now()}`);
+    if (!templateName) return;
+    
+    const statusDiv = document.getElementById('templateStatus');
+    statusDiv.innerHTML = '<span class="loader"></span> Creating template...';
+    statusDiv.style.color = '#ffd166';
+    
+    try {
+        const response = await fetch(`/api/google-accounts/templates/${templateName}`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            statusDiv.innerHTML = `
+                ✅ Template created!<br>
+                <small style="color: rgba(255,255,255,0.7);">
+                    Path: ${data.path}<br>
+                    ${data.instructions}
+                </small>
+            `;
+            statusDiv.style.color = '#06d6a0';
+            loadTemplates();
+        } else {
+            statusDiv.innerHTML = `❌ Error: ${data.error}`;
+            statusDiv.style.color = '#ef476f';
+        }
+    } catch (error) {
+        statusDiv.innerHTML = `❌ Network error: ${error.message}`;
+        statusDiv.style.color = '#ef476f';
+    }
+}
+
+async function loadTemplates() {
+    try {
+        const response = await fetch('/api/google-accounts/templates');
+        const data = await response.json();
+        
+        let html = '';
+        if (data.success && data.templates.length > 0) {
+            html = '<ul>';
+            data.templates.forEach(template => {
+                html += `<li><strong>${template}</strong></li>`;
+            });
+            html += '</ul>';
+        } else {
+            html = 'No templates created yet.';
+        }
+        
+        document.getElementById('templatesList').innerHTML = html;
+    } catch (error) {
+        document.getElementById('templatesList').innerHTML = 'Error loading templates';
+    }
+}
+
+// Update toggle function
+function toggleGoogleAccountSelection() {
+    const useGoogle = document.getElementById('useGoogleAccount').checked;
+    document.getElementById('googleAccountSelection').style.display = useGoogle ? 'block' : 'none';
+    
+    if (useGoogle) {
+        loadGoogleAccounts();
+    }
+}
+
+// Update startSession function to include googleAccount
+async function startSession() {
+    const targetUrl = document.getElementById('targetUrl').value;
+    const proxyType = document.getElementById('proxyType').value;
+    const deviceType = document.getElementById('deviceType').value;
+    const searchEngine = document.getElementById('searchEngine').value;
+    const keywordMode = document.getElementById('keywordMode').value;
+    const customKeywords = document.getElementById('customKeywords').value;
+    const useGoogleAccount = document.getElementById('useGoogleAccount').checked;
+    const googleAccount = useGoogleAccount ? document.getElementById('googleAccount').value : 'none';
+    
+    // Show loading
+    const submitBtn = document.querySelector('#sessionForm button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="loader"></span> Starting...';
+    
+    try {
+        let keywordsArray = [];
+        if (keywordMode === 'manual' && customKeywords.trim()) {
+            keywordsArray = customKeywords.split(',')
+                .map(k => k.trim())
+                .filter(k => k.length > 2);
+        }
+        
+        const response = await fetch('/api/start-organic', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                targetUrl,
+                proxyType,
+                deviceType,
+                searchEngine: searchEngine === 'both' ? (Math.random() > 0.5 ? 'google' : 'bing') : searchEngine,
+                keywordMode,
+                customKeywords: keywordsArray,
+                googleAccount,
+                useProfile: true,
+                maxKeywords: 5,
+                enableSubUrl: true
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(`✅ Session started!\nSession ID: ${result.sessionId.substring(0, 12)}...\nGoogle Account: ${useGoogleAccount ? 'Yes' : 'No'}`);
+            closeModal();
+            refreshAllData();
+        } else {
+            alert(`❌ Error: ${result.error}`);
+        }
+    } catch (error) {
+        alert(`❌ Network error: ${error.message}`);
+    } finally {
+        submitBtn.innerHTML = originalText;
+    }
+    }
 
     </script>
 </body>
