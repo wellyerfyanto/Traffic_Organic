@@ -1,0 +1,92 @@
+const fs = require('fs');
+const path = require('path');
+
+console.log('🔍 CHECKING PROJECT STRUCTURE...\n');
+
+const requiredFiles = [
+    'server.js',
+    'package.json',
+    '.env',
+    'bot/trafficGenerator.js',
+    'bot/proxyHandler.js',
+    'bot/keywordAnalyzer.js',
+    'bot/botHandler.js',
+    'public/index.html',
+    'public/monitoring.html',
+    'public/test-keywords.html'
+];
+
+const missingFiles = [];
+const existingFiles = [];
+
+requiredFiles.forEach(file => {
+    const filePath = path.join(__dirname, file);
+    if (fs.existsSync(filePath)) {
+        existingFiles.push(file);
+        console.log(`✅ ${file}`);
+    } else {
+        missingFiles.push(file);
+        console.log(`❌ ${file} - MISSING`);
+    }
+});
+
+console.log('\n📊 SUMMARY:');
+console.log(`Total files checked: ${requiredFiles.length}`);
+console.log(`Found: ${existingFiles.length}`);
+console.log(`Missing: ${missingFiles.length}`);
+
+if (missingFiles.length > 0) {
+    console.log('\n⚠️ MISSING FILES:');
+    missingFiles.forEach(file => console.log(`   - ${file}`));
+    
+    console.log('\n🛠️ FIX OPTIONS:');
+    console.log('   1. Run: node fix-proxy-loader.js');
+    console.log('   2. Check file permissions');
+    console.log('   3. Verify all required .txt files exist');
+} else {
+    console.log('\n🎉 ALL FILES PRESENT! System is ready.');
+    console.log('\n🚀 STARTUP COMMANDS:');
+    console.log('   npm install');
+    console.log('   node server.js');
+    console.log('\n📊 DASHBOARD: http://localhost:3000/monitoring');
+}
+
+// Check for auto-loop files that should be removed
+console.log('\n🔍 CHECKING FOR OLD AUTO-LOOP FILES...');
+const autoLoopFiles = [
+    'test-auto-loop.js',
+    'auto-loop-config.json',
+    'loop-sessions.txt'
+];
+
+autoLoopFiles.forEach(file => {
+    const filePath = path.join(__dirname, file);
+    if (fs.existsSync(filePath)) {
+        console.log(`⚠️ Found old auto-loop file: ${file} - Should be removed`);
+    }
+});
+
+// Verify batch system in server.js
+console.log('\n🔍 VERIFYING BATCH SYSTEM...');
+try {
+    const serverContent = fs.readFileSync(path.join(__dirname, 'server.js'), 'utf8');
+    
+    const checks = [
+        { name: 'Batch Session Manager', pattern: 'class BatchSessionManager' },
+        { name: 'Batch API Endpoints', pattern: '/api/batch/create' },
+        { name: 'Max 5 Concurrent', pattern: 'maxConcurrent.*=.*5' },
+        { name: 'Max 1000 Total', pattern: 'maxTotal.*=.*1000' }
+    ];
+    
+    checks.forEach(check => {
+        if (serverContent.includes(check.pattern)) {
+            console.log(`✅ ${check.name}`);
+        } else {
+            console.log(`❌ ${check.name} - Not found`);
+        }
+    });
+} catch (error) {
+    console.log('❌ Could not verify server.js:', error.message);
+}
+
+console.log('\n✅ STRUCTURE CHECK COMPLETE');
