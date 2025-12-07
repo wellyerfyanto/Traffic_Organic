@@ -26,6 +26,8 @@ let sessionConfig = {
 };
 
 // ==================== GOOGLE ACCOUNTS MANAGER ====================
+const fs = require('fs').promises;  // ✅ Gunakan fs.promises
+const path = require('path');
 const crypto = require('crypto');
 
 class GoogleAccountsManager {
@@ -37,20 +39,33 @@ class GoogleAccountsManager {
 
     async init() {
         try {
-            await fs.mkdir(path.dirname(this.accountsFile), { recursive: true });
+            // Buat direktori parent jika belum ada
+            const accountsDir = path.dirname(this.accountsFile);
+            
+            // Gunakan fs.promises.mkdir dengan recursive
+            await fs.mkdir(accountsDir, { recursive: true });
             await fs.mkdir(this.templatesDir, { recursive: true });
             
-            if (!await this.exists(this.accountsFile)) {
+            // Periksa apakah file accounts ada
+            try {
+                await fs.access(this.accountsFile);
+                console.log('✅ Google accounts file exists');
+            } catch {
+                // File tidak ada, buat baru
                 await this.saveAccounts([]);
+                console.log('📄 Created new Google accounts file');
             }
+            
+            console.log('✅ Google Accounts Manager initialized');
         } catch (error) {
-            console.error('GoogleAccountsManager init error:', error);
+            console.error('❌ GoogleAccountsManager init error:', error.message);
         }
     }
 
-    async exists(path) {
+    // Helper untuk check file exists
+    async fileExists(filePath) {
         try {
-            await fs.access(path);
+            await fs.access(filePath);
             return true;
         } catch {
             return false;
@@ -59,24 +74,33 @@ class GoogleAccountsManager {
 
     // Encrypt password
     encryptPassword(password) {
-        const iv = crypto.randomBytes(16);
-        const key = crypto.createHash('sha256')
-            .update(process.env.ENCRYPTION_KEY || 'organic-traffic-bot-2025')
-            .digest();
-        
-        const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-        let encrypted = cipher.update(password, 'utf8', 'hex');
-        encrypted += cipher.final('hex');
-        
-        return {
-            iv: iv.toString('hex'),
-            data: encrypted
-        };
+        try {
+            const iv = crypto.randomBytes(16);
+            const key = crypto.createHash('sha256')
+                .update(process.env.ENCRYPTION_KEY || 'organic-traffic-bot-2025')
+                .digest();
+            
+            const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+            let encrypted = cipher.update(password, 'utf8', 'hex');
+            encrypted += cipher.final('hex');
+            
+            return {
+                iv: iv.toString('hex'),
+                data: encrypted
+            };
+        } catch (error) {
+            console.error('❌ Encryption error:', error.message);
+            return null;
+        }
     }
 
     // Decrypt password
     decryptPassword(encrypted) {
         try {
+            if (!encrypted || !encrypted.iv || !encrypted.data) {
+                return null;
+            }
+            
             const key = crypto.createHash('sha256')
                 .update(process.env.ENCRYPTION_KEY || 'organic-traffic-bot-2025')
                 .digest();
@@ -88,147 +112,236 @@ class GoogleAccountsManager {
             decrypted += decipher.final('utf8');
             return decrypted;
         } catch (error) {
+            console.error('❌ Decryption error:', error.message);
             return null;
         }
     }
 
     async loadAccounts() {
         try {
-            const data = await fs.readFile(this.accountsFile, 'utf8');
-            return JSON.parse(data);
+            if (await this.fileExists(this.accountsFile)) {
+                const data = await fs.readFile(this.accountsFile, 'utf8');
+                return JSON.parse(data);
+            }
+            return [];
         } catch (error) {
+            console.error('❌ Error loading accounts:', error.message);
             return [];
         }
     }
 
     async saveAccounts(accounts) {
-        await fs.writeFile(this.accountsFile, JSON.stringify(accounts, null, 2));
+        try {
+            await fs.writeFile(this.accountsFile, JSON.stringify(accounts, null, 2));
+            return true;
+        } catch (error) {
+            console.error('❌ Error saving accounts:', error.message);
+            return false;
+        }
     }
 
     async addAccount(email, password, accountType = 'personal', has2FA = false, backupCodes = []) {
-        const accounts = await this.loadAccounts();
-        
-        // Check if email already exists
-        if (accounts.some(acc => acc.email === email)) {
-            throw new Error('Account already exists');
+        try {
+            const accounts = await this.loadAccounts();
+            
+            // Check if email already exists
+            if (accounts.some(acc => acc.email === email)) {
+                throw new Error('Account already exists');
+            }
+
+            const account = {
+                id: crypto.randomBytes(8).toString('hex'),
+                email: email,
+                password: this.encryptPassword(password),
+                accountType: accountType,
+                has2FA: has2FA,
+                backupCodes: backupCodes,
+                status: 'active',
+                created: new Date().toISOString(),
+                lastUsed: null,
+                usageCount: 0,
+                successRate: 100,
+                lastError: null
+            };
+
+            accounts.push(account);
+            await this.saveAccounts(accounts);
+            
+            console.log(`✅ Added Google account: ${email}`);
+            
+            return {
+                id: account.id,
+                email: account.email,
+                accountType: account.accountType,
+                status: account.status
+            };
+        } catch (error) {
+            console.error('❌ Error adding account:', error.message);
+            throw error;
         }
-
-        const account = {
-            id: crypto.randomBytes(8).toString('hex'),
-            email: email,
-            password: this.encryptPassword(password),
-            accountType: accountType,
-            has2FA: has2FA,
-            backupCodes: backupCodes,
-            status: 'active',
-            created: new Date().toISOString(),
-            lastUsed: null,
-            usageCount: 0,
-            successRate: 0,
-            lastError: null
-        };
-
-        accounts.push(account);
-        await this.saveAccounts(accounts);
-        
-        return {
-            id: account.id,
-            email: account.email,
-            accountType: account.accountType,
-            status: account.status
-        };
     }
 
     async removeAccount(accountId) {
-        const accounts = await this.loadAccounts();
-        const filtered = accounts.filter(acc => acc.id !== accountId);
-        await this.saveAccounts(filtered);
-        return filtered.length < accounts.length;
+        try {
+            const accounts = await this.loadAccounts();
+            const filtered = accounts.filter(acc => acc.id !== accountId);
+            
+            if (filtered.length < accounts.length) {
+                await this.saveAccounts(filtered);
+                console.log(`✅ Removed Google account ID: ${accountId}`);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('❌ Error removing account:', error.message);
+            return false;
+        }
     }
 
     async updateAccount(accountId, updates) {
-        const accounts = await this.loadAccounts();
-        const index = accounts.findIndex(acc => acc.id === accountId);
-        
-        if (index !== -1) {
-            accounts[index] = { ...accounts[index], ...updates };
-            await this.saveAccounts(accounts);
-            return accounts[index];
+        try {
+            const accounts = await this.loadAccounts();
+            const index = accounts.findIndex(acc => acc.id === accountId);
+            
+            if (index !== -1) {
+                accounts[index] = { ...accounts[index], ...updates };
+                await this.saveAccounts(accounts);
+                return accounts[index];
+            }
+            return null;
+        } catch (error) {
+            console.error('❌ Error updating account:', error.message);
+            return null;
         }
-        return null;
     }
 
     async getAccountCredentials(accountId) {
-        const accounts = await this.loadAccounts();
-        const account = accounts.find(acc => acc.id === accountId);
-        
-        if (!account) return null;
-        
-        return {
-            email: account.email,
-            password: this.decryptPassword(account.password),
-            has2FA: account.has2FA,
-            backupCodes: account.backupCodes
-        };
+        try {
+            const accounts = await this.loadAccounts();
+            const account = accounts.find(acc => acc.id === accountId);
+            
+            if (!account) return null;
+            
+            const password = this.decryptPassword(account.password);
+            
+            if (!password) {
+                console.error(`❌ Failed to decrypt password for account: ${account.email}`);
+                return null;
+            }
+            
+            return {
+                email: account.email,
+                password: password,
+                has2FA: account.has2FA,
+                backupCodes: account.backupCodes
+            };
+        } catch (error) {
+            console.error('❌ Error getting credentials:', error.message);
+            return null;
+        }
     }
 
     async getRandomAccount() {
-        const accounts = await this.loadAccounts();
-        const activeAccounts = accounts.filter(acc => acc.status === 'active');
-        
-        if (activeAccounts.length === 0) return null;
-        
-        // Sort by least recently used
-        activeAccounts.sort((a, b) => {
-            const dateA = a.lastUsed ? new Date(a.lastUsed) : new Date(0);
-            const dateB = b.lastUsed ? new Date(b.lastUsed) : new Date(0);
-            return dateA - dateB;
-        });
-        
-        return activeAccounts[0];
+        try {
+            const accounts = await this.loadAccounts();
+            const activeAccounts = accounts.filter(acc => 
+                acc.status === 'active' && !acc.has2FA
+            );
+            
+            if (activeAccounts.length === 0) return null;
+            
+            // Sort by least recently used
+            activeAccounts.sort((a, b) => {
+                const dateA = a.lastUsed ? new Date(a.lastUsed) : new Date(0);
+                const dateB = b.lastUsed ? new Date(b.lastUsed) : new Date(0);
+                return dateA - dateB;
+            });
+            
+            return activeAccounts[0];
+        } catch (error) {
+            console.error('❌ Error getting random account:', error.message);
+            return null;
+        }
     }
 
     async incrementUsage(accountId, success = true) {
-        const accounts = await this.loadAccounts();
-        const index = accounts.findIndex(acc => acc.id === accountId);
-        
-        if (index !== -1) {
-            accounts[index].usageCount = (accounts[index].usageCount || 0) + 1;
-            accounts[index].lastUsed = new Date().toISOString();
+        try {
+            const accounts = await this.loadAccounts();
+            const index = accounts.findIndex(acc => acc.id === accountId);
             
-            // Update success rate
-            const total = accounts[index].usageCount;
-            const successes = accounts[index].successRate * (total - 1) + (success ? 1 : 0);
-            accounts[index].successRate = successes / total;
-            
-            // Mark as suspicious if success rate < 30%
-            if (accounts[index].successRate < 0.3 && total > 5) {
-                accounts[index].status = 'suspicious';
+            if (index !== -1) {
+                const account = accounts[index];
+                account.usageCount = (account.usageCount || 0) + 1;
+                account.lastUsed = new Date().toISOString();
+                
+                // Update success rate
+                const total = account.usageCount;
+                const successes = (account.successRate || 100) * (total - 1) + (success ? 100 : 0);
+                account.successRate = successes / total;
+                
+                // Mark as suspicious if success rate < 30%
+                if (account.successRate < 30 && total > 5) {
+                    account.status = 'suspicious';
+                    console.log(`⚠️ Account ${account.email} marked as suspicious (success rate: ${account.successRate.toFixed(1)}%)`);
+                }
+                
+                await this.saveAccounts(accounts);
+                return true;
             }
-            
-            await this.saveAccounts(accounts);
+            return false;
+        } catch (error) {
+            console.error('❌ Error incrementing usage:', error.message);
+            return false;
         }
     }
 
     async getTemplates() {
         try {
-            const templates = await fs.readdir(this.templatesDir);
-            return templates.filter(t => !t.startsWith('.'));
+            if (await this.fileExists(this.templatesDir)) {
+                const templates = await fs.readdir(this.templatesDir);
+                return templates.filter(t => !t.startsWith('.'));
+            }
+            return [];
         } catch (error) {
+            console.error('❌ Error getting templates:', error.message);
             return [];
         }
     }
 
     async createTemplate(templateName) {
-        const templatePath = path.join(this.templatesDir, templateName);
-        await fs.mkdir(templatePath, { recursive: true });
-        return templatePath;
+        try {
+            const templatePath = path.join(this.templatesDir, templateName);
+            await fs.mkdir(templatePath, { recursive: true });
+            
+            // Create basic template info
+            const templateInfo = {
+                name: templateName,
+                path: templatePath,
+                created: new Date().toISOString(),
+                description: 'Chrome profile template for Google login'
+            };
+            
+            const infoFile = path.join(templatePath, 'template-info.json');
+            await fs.writeFile(infoFile, JSON.stringify(templateInfo, null, 2));
+            
+            console.log(`✅ Created template: ${templateName}`);
+            
+            return {
+                success: true,
+                template: templateName,
+                path: templatePath,
+                instructions: `Open Chrome with: chrome.exe --user-data-dir="${templatePath}"\nLogin to Google account, then close browser.`
+            };
+        } catch (error) {
+            console.error('❌ Error creating template:', error.message);
+            return { success: false, error: error.message };
+        }
     }
 }
 
 // Initialize manager
 const googleAccountsManager = new GoogleAccountsManager();
-
+            
 // ==================== BATCH SESSION SYSTEM ====================
 class BatchSessionManager {
     constructor() {
