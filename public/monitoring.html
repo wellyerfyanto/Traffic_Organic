@@ -418,12 +418,16 @@
                 <p style="color: rgba(255,255,255,0.7); margin-top: 5px;">Batch Session System • Max 5 Concurrent • 1000 Total Sessions</p>
             </div>
             <div style="display: flex; gap: 10px; align-items: center;">
-                <div id="lastUpdate" style="background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 10px;">
-                    🔄 Last Update: <span id="updateTime">Loading...</span>
-                </div>
-                <button class="btn btn-info" onclick="refreshAllData()">
-                    <span id="refreshIcon">🔄</span> Refresh Data
-                </button>
+    <div id="lastUpdate" style="background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 10px;">
+        🔄 Last Update: <span id="updateTime">Loading...</span>
+    </div>
+    <!-- TAMBAH TOMBOL INI -->
+    <button class="btn btn-info" onclick="showGoogleAccountsModal()">
+        🔐 Google Accounts
+    </button>
+    <button class="btn btn-info" onclick="refreshAllData()">
+        <span id="refreshIcon">🔄</span> Refresh Data
+    </button>
             </div>
         </div>
 
@@ -728,6 +732,142 @@ contoh: crypto news, bitcoin today, trading 2024"></textarea>
             </div>
         </div>
     </div>
+
+    <!-- GOOGLE ACCOUNTS MODAL -->
+<div id="googleAccountsModal" class="modal">
+    <div class="modal-content modal-content-wide">
+        <h2 class="modal-title">🔐 Google Accounts Manager</h2>
+        
+        <!-- Tabs -->
+        <div class="proxy-tabs">
+            <button class="proxy-tab active" onclick="switchGoogleTab('accounts')">📋 Accounts</button>
+            <button class="proxy-tab" onclick="switchGoogleTab('add')">➕ Add Account</button>
+            <button class="proxy-tab" onclick="switchGoogleTab('templates')">📁 Profile Templates</button>
+        </div>
+        
+        <!-- Accounts List Tab -->
+        <div id="googleAccountsListTab" class="proxy-tab-content active">
+            <div style="margin-bottom: 15px;">
+                <button class="btn btn-success" onclick="switchGoogleTab('add')">
+                    ➕ Add New Account
+                </button>
+                <button class="btn btn-info" onclick="refreshGoogleAccounts()">
+                    🔄 Refresh
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <table id="googleAccountsTable">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Used</th>
+                            <th>Last Login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="googleAccountsBody">
+                        <tr><td colspan="5">Loading accounts...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="margin-top: 15px; color: rgba(255,255,255,0.6); font-size: 12px;">
+                <strong>Tips:</strong> 
+                <ul style="margin: 5px 0; padding-left: 20px;">
+                    <li>Use accounts without 2FA for automatic login</li>
+                    <li>Test each account manually first</li>
+                    <li>Rotate accounts every 100 sessions</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Add Account Tab -->
+        <div id="googleAddAccountTab" class="proxy-tab-content">
+            <h3 style="margin-bottom: 20px;">➕ Add Google Account</h3>
+            
+            <form id="addGoogleAccountForm">
+                <div class="form-group">
+                    <label for="googleEmail">Email Address</label>
+                    <input type="email" id="googleEmail" class="form-control" 
+                           placeholder="your-email@gmail.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="googlePassword">Password</label>
+                    <input type="password" id="googlePassword" class="form-control" 
+                           placeholder="••••••••" required>
+                    <small style="color: rgba(255,255,255,0.6);">
+                        Note: Password is encrypted and stored securely
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="accountType">Account Type</label>
+                    <select id="accountType" class="form-control">
+                        <option value="personal">Personal Account</option>
+                        <option value="business">Business/Workspace</option>
+                        <option value="temp">Temporary (Auto-clean)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="has2FA">
+                        2FA Enabled (requires backup codes)
+                    </label>
+                </div>
+                
+                <div class="form-group" id="backupCodesSection" style="display: none;">
+                    <label for="backupCodes">Backup Codes (comma separated)</label>
+                    <textarea id="backupCodes" class="form-control" rows="3" 
+                              placeholder="1111-2222, 3333-4444, 5555-6666"></textarea>
+                </div>
+                
+                <div class="btn-group" style="margin-top: 20px;">
+                    <button type="button" class="btn btn-danger" onclick="switchGoogleTab('accounts')">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        Add Account
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Profile Templates Tab -->
+        <div id="googleTemplatesTab" class="proxy-tab-content">
+            <h3 style="margin-bottom: 20px;">📁 Chrome Profile Templates</h3>
+            
+            <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <strong>How to create template:</strong>
+                <ol style="margin: 10px 0; padding-left: 20px;">
+                    <li>Click "Create Template" button</li>
+                    <li>New Chrome window will open</li>
+                    <li>Login to Google account manually</li>
+                    <li>Close Chrome when done</li>
+                    <li>Template will be saved automatically</li>
+                </ol>
+            </div>
+            
+            <button class="btn btn-primary" onclick="createChromeTemplate()">
+                🎨 Create New Template
+            </button>
+            
+            <div id="templateStatus" style="margin-top: 15px; padding: 10px; border-radius: 5px;"></div>
+            
+            <div id="templatesList" style="margin-top: 20px;">
+                Loading templates...
+            </div>
+        </div>
+        
+        <div class="btn-group" style="margin-top: 30px;">
+            <button class="btn btn-danger" onclick="closeGoogleAccountsModal()">Close</button>
+            <button class="btn btn-warning" onclick="testAllAccounts()">🧪 Test All Accounts</button>
+        </div>
+    </div>
+                            </div>
 
     <!-- SIMPLE PROXY LIST MODAL -->
     <div id="proxyListModal" class="modal">
