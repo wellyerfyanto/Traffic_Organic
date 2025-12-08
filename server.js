@@ -3,7 +3,6 @@ const session = require('express-session');
 const path = require('path');
 const helmet = require('helmet');
 const cors = require('cors');
-const fs = require('fs');
 require('dotenv').config();
 
 // ==================== RAILWAY ENVIRONMENT DETECTION ====================
@@ -27,7 +26,6 @@ let sessionConfig = {
 
 // ==================== GOOGLE ACCOUNTS MANAGER ====================
 const fs = require('fs').promises;  // ✅ Gunakan fs.promises
-const path = require('path');
 const crypto = require('crypto');
 
 class GoogleAccountsManager {
