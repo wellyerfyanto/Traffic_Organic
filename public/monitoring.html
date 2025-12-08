@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 Organic Traffic Bot Monitoring 2025</title>
+    <link rel="stylesheet" href="css/monitoring.css">
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div>
+                <h1>🤖 Organic Traffic Bot Dashboard <span id="serverStatus" class="status-badge status-online">✅ ONLINE</span></h1>
+                <p style="color: rgba(255,255,255,0.7); margin-top: 5px;">Batch Session System • Max 5 Concurrent • 1000 Total Sessions</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div id="lastUpdate" style="background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 10px;">
+                    🔄 Last Update: <span id="updateTime">Loading...</span>
+                </div>
+                <button class="btn btn-info" onclick="showGoogleAccountsModal()">
+                    🔐 Google Accounts
+                </button>
+                <button class="btn btn-info" onclick="refreshAllData()">
+                    <span id="refreshIcon">🔄</span> Refresh Data
+                </button>
+            </div>
+        </div>
+
+        <!-- MAIN GRID -->
+        <div class="grid">
+            <!-- SYSTEM STATUS -->
+            <div class="card">
+                <div class="card-title">📊 System Status</div>
+                <div class="stats-grid" id="systemStats">
+                    <div class="stat-box">
+                        <div class="stat-label">Active Sessions</div>
+                        <div class="stat-value" id="activeSessions">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Total Proxies</div>
+                        <div class="stat-value" id="totalProxies">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">VPN Count</div>
+                        <div class="stat-value" id="vpnCount">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Success Rate</div>
+                        <div class="stat-value" id="successRate">0%</div>
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div>System Health</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="healthBar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUICK ACTIONS -->
+            <div class="card">
+                <div class="card-title">⚡ Quick Actions</div>
+                <div class="btn-group">
+                    <button class="btn btn-success" onclick="showSessionModal()">
+                        ▶ Start Single Session
+                    </button>
+                    <button class="btn btn-copy" onclick="showBatchModal()">
+                        🚀 Start Batch Sessions
+                    </button>
+                    <button class="btn btn-warning" onclick="refreshProxies()">
+                        🔄 Refresh Proxies
+                    </button>
+                    <button class="btn btn-danger" onclick="stopAllSessions()">
+                        ⏹ Stop All Sessions
+                    </button>
+                </div>
+                <div style="margin-top: 20px;">
+                    <h4>Batch Session Stats:</h4>
+                    <div id="batchStats" style="color: rgba(255,255,255,0.7); margin-top: 10px;">
+                        Loading batch statistics...
+                    </div>
+                </div>
+            </div>
+
+            <!-- BATCH STATUS CARD -->
+            <div class="card">
+                <div class="card-title">📊 Batch Sessions</div>
+                <div id="batchStatus">
+                    Loading batch sessions...
+                </div>
+                <button class="btn btn-primary" onclick="showBatchModal()" style="margin-top: 15px;">
+                    🚀 Start New Batch
+                </button>
+            </div>
+
+            <!-- PROXY STATISTICS -->
+            <div class="card">
+                <div class="card-title">🌐 Proxy Statistics</div>
+                <div id="proxyStats">
+                    Loading proxy statistics...
+                </div>
+                <button class="btn btn-info" onclick="showProxyDetailsModal()" style="margin-top: 15px;">
+                    🔍 View Proxy Details
+                </button>
+            </div>
+        </div>
+
+        <!-- DETAILED SECTIONS -->
+        <div class="grid">
+            <!-- ACTIVE SESSIONS -->
+            <div class="card" style="grid-column: span 2;">
+                <div class="card-title">📈 Active Sessions</div>
+                <div class="table-container" id="sessionsTable">
+                    Loading sessions...
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- VPN DETAILS -->
+            <div class="card">
+                <div class="card-title">🔒 VPN Details</div>
+                <div id="vpnDetails">
+                    Loading VPN information...
+                </div>
+            </div>
+
+            <!-- FASTEST PROXIES -->
+            <div class="card">
+                <div class="card-title">⚡ Fastest Proxies</div>
+                <div id="fastestProxies">
+                    Loading proxy list...
+                </div>
+                <button class="btn btn-copy" onclick="copyFastestProxies()" style="margin-top: 10px;">
+                    📋 Copy Fastest Proxies
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FOR STARTING SESSION -->
+    <div id="sessionModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">🚀 Start Single Session</h2>
+            <form id="sessionForm">
+                <div class="form-group">
+                    <label for="targetUrl">Target URL</label>
+                    <input type="url" id="targetUrl" class="form-control" 
+                           value="https://cryptoajah.blogspot.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="proxyType">Proxy Type</label>
+                    <select id="proxyType" class="form-control">
+                        <option value="vpn">🔒 VPN (Most Secure)</option>
+                        <option value="fresh">🆕 Fresh Proxies</option>
+                        <option value="web">🌐 Web Gateway</option>
+                        <option value="direct">⚡ Direct Connection</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="deviceType">Device Type</label>
+                    <select id="deviceType" class="form-control">
+                        <option value="desktop">🖥️ Desktop</option>
+                        <option value="mobile">📱 Mobile</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="useGoogleAccount">
+                        <input type="checkbox" id="useGoogleAccount" onchange="toggleGoogleAccountSelection()">
+                        🔐 Use Google Account Login
+                    </label>
+                </div>
+
+                <div class="form-group" id="googleAccountSelection" style="display: none;">
+                    <label for="googleAccount">Select Google Account</label>
+                    <select id="googleAccount" class="form-control">
+                        <option value="none">🚫 No account (Public)</option>
+                        <option value="random">🎲 Random (Auto-rotate)</option>
+                        <!-- Accounts akan di-load via JS -->
+                    </select>
+                    <small style="color: rgba(255,255,255,0.6);">
+                        Using Google accounts reduces bot detection significantly
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="searchEngine">Search Engine</label>
+                    <select id="searchEngine" class="form-control">
+                        <option value="google">Google</option>
+                        <option value="bing">Bing</option>
+                        <option value="both">Both (Random)</option>
+                    </select>
+                </div>
+
+                <!-- KEYWORD MODE SELECTION -->
+                <div class="form-group">
+                    <label for="keywordMode">Keyword Mode</label>
+                    <select id="keywordMode" class="form-control" onchange="toggleKeywordInput()">
+                        <option value="auto">Auto Analysis (Default)</option>
+                        <option value="manual">Manual Keywords</option>
+                    </select>
+                </div>
+
+                <!-- MANUAL KEYWORDS INPUT -->
+                <div class="form-group" id="manualKeywordsSection" style="display: none;">
+                    <label for="customKeywords">Custom Keywords</label>
+                    <textarea id="customKeywords" class="form-control" rows="3" 
+                              placeholder="Masukkan kata kunci, pisahkan dengan koma
+contoh: crypto news, bitcoin today, trading 2024"></textarea>
+                    <small>Gunakan koma untuk memisahkan multiple keywords</small>
+                </div>
+                
+                <div class="btn-group" style="margin-top: 30px;">
+                    <button type="button" class="btn btn-danger" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Start Session</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- BATCH MODAL -->
+    <div id="batchModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">🚀 Start Batch Sessions</h2>
+            <form id="batchForm">
+                <div class="form-group">
+                    <label for="batchTargetUrl">Target URL</label>
+                    <input type="url" id="batchTargetUrl" class="form-control" 
+                           value="https://cryptoajah.blogspot.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="totalSessions">Total Sessions (max 1000)</label>
+                    <input type="number" id="totalSessions" class="form-control" 
+                           value="10" min="1" max="1000" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="concurrentSessions">Concurrent Sessions (max 5)</label>
+                    <input type="number" id="concurrentSessions" class="form-control" 
+                           value="3" min="1" max="5" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="batchProxyType">Proxy Type</label>
+                    <select id="batchProxyType" class="form-control">
+                        <option value="vpn">🔒 VPN (Recommended)</option>
+                        <option value="fresh">🆕 Fresh Proxies</option>
+                        <option value="web">🌐 Web Gateway</option>
+                        <option value="random">🎲 Random</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="batchDeviceType">Device Type</label>
+                    <select id="batchDeviceType" class="form-control">
+                        <option value="desktop">🖥️ Desktop</option>
+                        <option value="mobile">📱 Mobile</option>
+                        <option value="random">🎲 Random</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="batchKeywordMode">Keyword Mode</label>
+                    <select id="batchKeywordMode" class="form-control" onchange="toggleBatchKeywords()">
+                        <option value="auto">Auto Analysis</option>
+                        <option value="manual">Manual Keywords</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="batchKeywordsSection" style="display: none;">
+                    <label for="batchCustomKeywords">Custom Keywords (comma separated)</label>
+                    <textarea id="batchCustomKeywords" class="form-control" rows="3" 
+                              placeholder="crypto, bitcoin, blockchain, trading, news"></textarea>
+                </div>
+                
+                <div class="btn-group" style="margin-top: 30px;">
+                    <button type="button" class="btn btn-danger" onclick="closeBatchModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">🚀 Start Batch Sessions</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PROXY DETAILS MODAL -->
+    <div id="proxyDetailsModal" class="modal">
+        <div class="modal-content modal-content-wide">
+            <h2 class="modal-title">🔍 Detailed Proxy Information</h2>
+            
+            <div class="proxy-tabs">
+                <button class="proxy-tab active" onclick="switchProxyTab('fresh')">🆕 Fresh Proxies</button>
+                <button class="proxy-tab" onclick="switchProxyTab('vpn')">🔒 VPN Proxies</button>
+                <button class="proxy-tab" onclick="switchProxyTab('web')">🌐 Web Proxies</button>
+                <button class="proxy-tab" onclick="switchProxyTab('all')">📋 All Proxies</button>
+            </div>
+            
+            <div id="freshProxyContent" class="proxy-tab-content active">
+                <textarea id="freshProxyText" class="proxy-textarea" rows="10" readonly></textarea>
+                <button class="btn btn-copy" onclick="copyProxyText('fresh')">📋 Copy Fresh Proxies</button>
+                <button class="btn btn-info" onclick="downloadProxies('fresh')">💾 Download as TXT</button>
+            </div>
+            
+            <div id="vpnProxyContent" class="proxy-tab-content">
+                <textarea id="vpnProxyText" class="proxy-textarea" rows="10" readonly></textarea>
+                <button class="btn btn-copy" onclick="copyProxyText('vpn')">📋 Copy VPN Proxies</button>
+                <button class="btn btn-info" onclick="downloadProxies('vpn')">💾 Download as TXT</button>
+            </div>
+            
+            <div id="webProxyContent" class="proxy-tab-content">
+                <textarea id="webProxyText" class="proxy-textarea" rows="10" readonly></textarea>
+                <button class="btn btn-copy" onclick="copyProxyText('web')">📋 Copy Web Proxies</button>
+                <button class="btn btn-info" onclick="downloadProxies('web')">💾 Download as TXT</button>
+            </div>
+            
+            <div id="allProxyContent" class="proxy-tab-content">
+                <textarea id="allProxyText" class="proxy-textarea" rows="15" readonly></textarea>
+                <button class="btn btn-copy" onclick="copyProxyText('all')">📋 Copy All Proxies</button>
+                <button class="btn btn-info" onclick="downloadProxies('all')">💾 Download as TXT</button>
+            </div>
+            
+            <div class="btn-group" style="margin-top: 20px;">
+                <button class="btn btn-danger" onclick="closeProxyDetailsModal()">Close</button>
+                <button class="btn btn-warning" onclick="refreshProxiesFromModal()">🔄 Refresh Proxies</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GOOGLE ACCOUNTS MODAL -->
+    <div id="googleAccountsModal" class="modal">
+        <div class="modal-content modal-content-wide">
+            <h2 class="modal-title">🔐 Google Accounts Manager</h2>
+            
+            <!-- Tabs -->
+            <div class="proxy-tabs">
+                <button class="proxy-tab active" onclick="switchGoogleTab('accounts')">📋 Accounts</button>
+                <button class="proxy-tab" onclick="switchGoogleTab('add')">➕ Add Account</button>
+                <button class="proxy-tab" onclick="switchGoogleTab('templates')">📁 Profile Templates</button>
+            </div>
+            
+            <!-- Accounts List Tab -->
+            <div id="googleAccountsListTab" class="proxy-tab-content active">
+                <div style="margin-bottom: 15px;">
+                    <button class="btn btn-success" onclick="switchGoogleTab('add')">
+                        ➕ Add New Account
+                    </button>
+                    <button class="btn btn-info" onclick="refreshGoogleAccounts()">
+                        🔄 Refresh
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table id="googleAccountsTable">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Used</th>
+                                <th>Last Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="googleAccountsBody">
+                            <tr><td colspan="5">Loading accounts...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 15px; color: rgba(255,255,255,0.6); font-size: 12px;">
+                    <strong>Tips:</strong> 
+                    <ul style="margin: 5px 0; padding-left: 20px;">
+                        <li>Use accounts without 2FA for automatic login</li>
+                        <li>Test each account manually first</li>
+                        <li>Rotate accounts every 100 sessions</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Add Account Tab -->
+            <div id="googleAddAccountTab" class="proxy-tab-content">
+                <h3 style="margin-bottom: 20px;">➕ Add Google Account</h3>
+                
+                <form id="addGoogleAccountForm">
+                    <div class="form-group">
+                        <label for="googleEmail">Email Address</label>
+                        <input type="email" id="googleEmail" class="form-control" 
+                               placeholder="your-email@gmail.com" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="googlePassword">Password</label>
+                        <input type="password" id="googlePassword" class="form-control" 
+                               placeholder="••••••••" required>
+                        <small style="color: rgba(255,255,255,0.6);">
+                            Note: Password is encrypted and stored securely
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="accountType">Account Type</label>
+                        <select id="accountType" class="form-control">
+                            <option value="personal">Personal Account</option>
+                            <option value="business">Business/Workspace</option>
+                            <option value="temp">Temporary (Auto-clean)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="has2FA">
+                            2FA Enabled (requires backup codes)
+                        </label>
+                    </div>
+                    
+                    <div class="form-group" id="backupCodesSection" style="display: none;">
+                        <label for="backupCodes">Backup Codes (comma separated)</label>
+                        <textarea id="backupCodes" class="form-control" rows="3" 
+                                  placeholder="1111-2222, 3333-4444, 5555-6666"></textarea>
+                    </div>
+                    
+                    <div class="btn-group" style="margin-top: 20px;">
+                        <button type="button" class="btn btn-danger" onclick="switchGoogleTab('accounts')">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            Add Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Profile Templates Tab -->
+            <div id="googleTemplatesTab" class="proxy-tab-content">
+                <h3 style="margin-bottom: 20px;">📁 Chrome Profile Templates</h3>
+                
+                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <strong>How to create template:</strong>
+                    <ol style="margin: 10px 0; padding-left: 20px;">
+                        <li>Click "Create Template" button</li>
+                        <li>New Chrome window will open</li>
+                        <li>Login to Google account manually</li>
+                        <li>Close Chrome when done</li>
+                        <li>Template will be saved automatically</li>
+                    </ol>
+                </div>
+                
+                <button class="btn btn-primary" onclick="createChromeTemplate()">
+                    🎨 Create New Template
+                </button>
+                
+                <div id="templateStatus" style="margin-top: 15px; padding: 10px; border-radius: 5px;"></div>
+                
+                <div id="templatesList" style="margin-top: 20px;">
+                    Loading templates...
+                </div>
+            </div>
+            
+            <div class="btn-group" style="margin-top: 30px;">
+                <button class="btn btn-danger" onclick="closeGoogleAccountsModal()">Close</button>
+                <button class="btn btn-warning" onclick="testAllAccounts()">🧪 Test All Accounts</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIMPLE PROXY LIST MODAL -->
+    <div id="proxyListModal" class="modal">
+        <div class="modal-content modal-content-wide">
+            <h2 class="modal-title">📋 All Active Proxies (TXT Format)</h2>
+            
+            <div style="margin-bottom: 15px;">
+                <button class="btn btn-copy" onclick="copyAllProxies()">📋 Copy All Proxies</button>
+                <button class="btn btn-info" onclick="downloadAllProxies()">💾 Download TXT File</button>
+            </div>
+            
+            <textarea id="allProxiesText" class="proxy-textarea" rows="20" readonly></textarea>
+            
+            <div class="btn-group" style="margin-top: 20px;">
+                <button class="btn btn-danger" onclick="closeProxyListModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/monitoring.js"></script>
+</body>
+</html>
